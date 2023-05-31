@@ -7,12 +7,12 @@
   
   <title>32位格式化字符串-任意地址写就行 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="32位格式化字符串-任意地址写就行检查程序的保护:几乎没有任何保护 运行程序：12发现程序会给你一个地址，并且你输入的地方存在格式化字符串漏洞  ida打开程序：1发现了程序一开始给我们的地址就是变量V5的地址，只要让整型变量V5等于4那么我们就能够获得shell了。可是整个程序中没有能够修改V5的函数，所以我们只能够通过格式化字符串来修改V5的值从而获得shell。  gdb一下获得格式化字符串">
+  <meta name="description" content="32位格式化字符串-任意地址写就行检查程序的保护:几乎没有任何保护  运行程序：12发现程序会给你一个地址，并且你输入的地方存在格式化字符串漏洞  ida打开程序：1发现了程序一开始给我们的地址就是变量V5的地址，只要让整型变量V5等于4那么我们就能够获得shell了。可是整个程序中没有能够修改V5的函数，所以我们只能够通过格式化字符串来修改V5的值从而获得shell。  gdb一下获得格式化字符">
 <meta property="og:type" content="article">
 <meta property="og:title" content="32位格式化字符串-任意地址写就行">
 <meta property="og:url" content="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="32位格式化字符串-任意地址写就行检查程序的保护:几乎没有任何保护 运行程序：12发现程序会给你一个地址，并且你输入的地方存在格式化字符串漏洞  ida打开程序：1发现了程序一开始给我们的地址就是变量V5的地址，只要让整型变量V5等于4那么我们就能够获得shell了。可是整个程序中没有能够修改V5的函数，所以我们只能够通过格式化字符串来修改V5的值从而获得shell。  gdb一下获得格式化字符串">
+<meta property="og:description" content="32位格式化字符串-任意地址写就行检查程序的保护:几乎没有任何保护  运行程序：12发现程序会给你一个地址，并且你输入的地方存在格式化字符串漏洞  ida打开程序：1发现了程序一开始给我们的地址就是变量V5的地址，只要让整型变量V5等于4那么我们就能够获得shell了。可是整个程序中没有能够修改V5的函数，所以我们只能够通过格式化字符串来修改V5的值从而获得shell。  gdb一下获得格式化字符">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/1.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20.png">
@@ -25,7 +25,7 @@
 <meta property="og:image" content="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230531215613.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/~QA%60_2OEC83DP_OH9~MN@6.png">
 <meta property="article:published_time" content="2023-05-31T14:49:52.626Z">
-<meta property="article:modified_time" content="2023-05-31T15:09:34.554Z">
+<meta property="article:modified_time" content="2023-05-31T15:15:21.759Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/1.png">
@@ -99,9 +99,10 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="32位格式化字符串-任意地址写就行"><a href="#32位格式化字符串-任意地址写就行" class="headerlink" title="32位格式化字符串-任意地址写就行"></a>32位格式化字符串-任意地址写就行</h1><h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护:"></a>检查程序的保护:</h3><p>几乎没有任何保护<br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/1.png" alt="Alt text"></p>
+        <h1 id="32位格式化字符串-任意地址写就行"><a href="#32位格式化字符串-任意地址写就行" class="headerlink" title="32位格式化字符串-任意地址写就行"></a>32位格式化字符串-任意地址写就行</h1><h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护:"></a>检查程序的保护:</h3><p>几乎没有任何保护</p>
+<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/1.png"></p>
 <h3 id="运行程序："><a href="#运行程序：" class="headerlink" title="运行程序："></a>运行程序：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">发现程序会给你一个地址，并且你输入的地方存在格式化字符串漏洞</span><br></pre></td></tr></table></figure>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20.png" alt="Alt text"></p>
+<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20.png"></p>
 <h3 id="ida打开程序："><a href="#ida打开程序：" class="headerlink" title="ida打开程序："></a>ida打开程序：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发现了程序一开始给我们的地址就是变量V5的地址，只要让整型变量V5等于4那么我们就能够获得shell了。可是整个程序中没有能够修改V5的函数，所以我们只能够通过格式化字符串来修改V5的值从而获得shell。</span><br></pre></td></tr></table></figure>
 <p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/%E6%88%AA%E5%9B%BE.png" alt="Alt text"></p>
 <h3 id="gdb一下获得格式化字符串参数的偏移"><a href="#gdb一下获得格式化字符串参数的偏移" class="headerlink" title="gdb一下获得格式化字符串参数的偏移"></a>gdb一下获得格式化字符串参数的偏移</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">通过输入AAAAAA之后查看栈的地址我们可以知道我们输入的格式化字符串的参数为第六个格式化字符串参数。</span><br></pre></td></tr></table></figure>
@@ -115,7 +116,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clibugga40000hcv980zi4w42" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clibunz3s0000q8v95rrrf8yz" class="article-share-link">Share</a>
       
       
     </footer>
