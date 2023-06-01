@@ -7,20 +7,20 @@
   
   <title>32位格式化字符串-任意地址写就行2 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="32位格式化字符串-任意地址写就行2检查程序的保护发现canary和NX开了，那么栈溢出基本无望。 运行程序发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。 ida打开程序发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell 让我们来点开dword_804c044可以看到dword_804c">
+  <meta name="description" content="检查程序的保护发现canary和NX开了，那么栈溢出基本无望。 运行程序发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。 ida打开程序发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell 让我们来点开dword_804c044可以看到dword_804c044的值是存放在bss区里的，还知">
 <meta property="og:type" content="article">
 <meta property="og:title" content="32位格式化字符串-任意地址写就行2">
 <meta property="og:url" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="32位格式化字符串-任意地址写就行2检查程序的保护发现canary和NX开了，那么栈溢出基本无望。 运行程序发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。 ida打开程序发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell 让我们来点开dword_804c044可以看到dword_804c">
+<meta property="og:description" content="检查程序的保护发现canary和NX开了，那么栈溢出基本无望。 运行程序发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。 ida打开程序发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell 让我们来点开dword_804c044可以看到dword_804c044的值是存放在bss区里的，还知">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/3O_G@OLSK%60O0GTCPMI6NJDT.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/XS2SGX%605TE%7B~BTV0YV0P_55.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/2.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/3O_G@OLSK%60O0GTCPMI6NJDT.png">
-<meta property="article:published_time" content="2023-06-01T06:56:27.000Z">
-<meta property="article:modified_time" content="2023-06-01T07:27:56.285Z">
+<meta property="article:published_time" content="2023-06-01T06:56:27.623Z">
+<meta property="article:modified_time" content="2023-06-01T12:46:42.606Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png">
@@ -75,7 +75,7 @@
         <section id="main"><article id="post-32位格式化字符串-任意地址写就行2" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" class="article-date">
-  <time datetime="2023-06-01T06:56:27.000Z" itemprop="datePublished">2023-06-01</time>
+  <time datetime="2023-06-01T06:56:27.623Z" itemprop="datePublished">2023-06-01</time>
 </a>
     
   </div>
@@ -94,7 +94,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="32位格式化字符串-任意地址写就行2"><a href="#32位格式化字符串-任意地址写就行2" class="headerlink" title="32位格式化字符串-任意地址写就行2"></a>32位格式化字符串-任意地址写就行2</h1><h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护"></a>检查程序的保护</h3><p>发现canary和NX开了，那么栈溢出基本无望。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png" alt="Alt text"></p>
+        <h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护"></a>检查程序的保护</h3><p>发现canary和NX开了，那么栈溢出基本无望。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png" alt="Alt text"></p>
 <h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><p>发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/3O_G@OLSK%60O0GTCPMI6NJDT.png" alt="Alt text"></p>
 <h3 id="ida打开程序"><a href="#ida打开程序" class="headerlink" title="ida打开程序"></a>ida打开程序</h3><p>发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/XS2SGX%605TE%7B~BTV0YV0P_55.png" alt="Alt text"></p>
 <h4 id="让我们来点开dword-804c044"><a href="#让我们来点开dword-804c044" class="headerlink" title="让我们来点开dword_804c044"></a>让我们来点开dword_804c044</h4><p>可以看到dword_804c044的值是存放在bss区里的，还知道了地址。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/2.png" alt="Alt text"></p>
@@ -105,7 +105,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clid4pj4o0000mkv96fsxfb1m" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clid4zpu20002ggv9hgue5vtk" class="article-share-link">Share</a>
       
       
     </footer>

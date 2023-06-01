@@ -100,7 +100,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="clid4pj4v0005mkv967qn7ah7" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="clid4zpu00001ggv97ia8h35l" class="article-share-link">Share</a>
       
       
     </footer>
@@ -113,7 +113,7 @@
     <article id="post-32位格式化字符串-任意地址写就行2" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" class="article-date">
-  <time datetime="2023-06-01T06:56:27.000Z" itemprop="datePublished">2023-06-01</time>
+  <time datetime="2023-06-01T06:56:27.623Z" itemprop="datePublished">2023-06-01</time>
 </a>
     
   </div>
@@ -132,7 +132,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="32位格式化字符串-任意地址写就行2"><a href="#32位格式化字符串-任意地址写就行2" class="headerlink" title="32位格式化字符串-任意地址写就行2"></a>32位格式化字符串-任意地址写就行2</h1><h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护"></a>检查程序的保护</h3><p>发现canary和NX开了，那么栈溢出基本无望。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png" alt="Alt text"></p>
+        <h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护"></a>检查程序的保护</h3><p>发现canary和NX开了，那么栈溢出基本无望。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png" alt="Alt text"></p>
 <h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><p>发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/3O_G@OLSK%60O0GTCPMI6NJDT.png" alt="Alt text"></p>
 <h3 id="ida打开程序"><a href="#ida打开程序" class="headerlink" title="ida打开程序"></a>ida打开程序</h3><p>发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/XS2SGX%605TE%7B~BTV0YV0P_55.png" alt="Alt text"></p>
 <h4 id="让我们来点开dword-804c044"><a href="#让我们来点开dword-804c044" class="headerlink" title="让我们来点开dword_804c044"></a>让我们来点开dword_804c044</h4><p>可以看到dword_804c044的值是存放在bss区里的，还知道了地址。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/2.png" alt="Alt text"></p>
@@ -143,7 +143,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clid4pj4o0000mkv96fsxfb1m" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clid4zpu20002ggv9hgue5vtk" class="article-share-link">Share</a>
       
       
     </footer>
@@ -187,12 +187,13 @@
 <h3 id="exp的相关解释"><a href="#exp的相关解释" class="headerlink" title="exp的相关解释"></a>exp的相关解释</h3><p>1.为什么要在变量V5的前面多加一个A？<br>因为32位程序是以每四字节为一个内存单元的，而由于前面的”%4c”和”%8$n”占比不足4的倍数个字节，因此到了把变量V5的地址放入栈的时候就V5的地址就被拆开了一个字节。</p>
 <p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/G~J$$KZUMWM33E1QR00W.png" alt="Alt text"></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在栈上V5的地址也是不对齐的。</span><br></pre></td></tr></table></figure>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/123.png" alt="Alt text"><br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/123.png"><br>所以我们才要多放一个A来多占一个字节从而让V5的地址能够在栈上对齐四个字节，这样程序才能识别出V5的地址。<br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230531215613.png" alt="Alt text"><br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/~QA%60_2OEC83DP_OH9~MN@6.png" alt="Alt text"></p>
+<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/123.png" alt="Alt text"><br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/123.png"><br>所以我们才要多放一个A来多占一个字节从而让V5的地址能够在栈上对齐四个字节，这样程序才能识别出V5的地址。<br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230531215613.png" alt="Alt text"></p>
+<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/~QA%60_2OEC83DP_OH9~MN@6.png" alt="Alt text"></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clid4pj4t0002mkv9f9nt7i80" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clid4zptw0000ggv94bmeay2f" class="article-share-link">Share</a>
       
       
     </footer>
@@ -219,7 +220,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="clid4pj4t0003mkv97so2fljv" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="clid4zpu30003ggv9afmsh1ie" class="article-share-link">Share</a>
       
       
     </footer>
@@ -263,7 +264,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clid4pj4u0004mkv95gk30zgh" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clid4zpu40005ggv96szfh70m" class="article-share-link">Share</a>
       
       
     </footer>
@@ -324,7 +325,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clid4pj4r0001mkv97cflazhc" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clid4zpu40004ggv9clb2aad4" class="article-share-link">Share</a>
       
       
     </footer>
